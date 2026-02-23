@@ -1,9 +1,14 @@
+import os
 from openai import OpenAI
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv("../.env")
 
 # 初始化常量
-OPENAI_BASE_URL = "https://openrouter.ai/api/v1"
-OPENAI_API_KEY = "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"
-MODEL = "z-ai/glm-4.5-air:free"
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+MODEL = os.getenv("MODEL")
 
 # 创建 OpenAI 客户端
 client = OpenAI(
