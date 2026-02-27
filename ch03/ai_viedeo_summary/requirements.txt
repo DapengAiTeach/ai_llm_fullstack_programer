@@ -1,0 +1,4 @@
+openai==2.21.0
+python-dotenv==1.2.1
+pyqt6==6.10.2
+opencv-python==4.13.0.92
