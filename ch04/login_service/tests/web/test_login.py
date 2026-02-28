@@ -59,7 +59,7 @@ class TestLogin:
     def test_login_user_not_exist(self):
         """测试用户不存在"""
         response = client.post("/login", json={
-            "username": "non_existent_user_12345",
+            "username": "non_exist_user",
             "password": "any_password"
         })
         
