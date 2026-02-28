@@ -12,14 +12,10 @@ class User(BaseModel):
     password: str
 
 
-@app.post("/register")
-def register(user: User):
-    """用户注册"""
-    if user.username in users_db:
-        raise HTTPException(status_code=400, detail="用户名已存在")
-    
-    users_db[user.username] = user.password
-    return {"message": "注册成功", "username": user.username}
+# 导入并注册路由
+from web import register
+
+app.include_router(register.router)
 
 
 @app.post("/login")
