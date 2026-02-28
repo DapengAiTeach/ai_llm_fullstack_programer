@@ -1,19 +1,14 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 from core import db
+from schema.register import UserRegisterRequest, UserRegisterResponse
 
 router = APIRouter()
 
 
-class User(BaseModel):
-    username: str
-    password: str
-
-
-@router.post("/register")
-def register(user: User):
+@router.post("/register", response_model=UserRegisterResponse)
+def register(user: UserRegisterRequest):
     """用户注册"""
     if not db.create_user(user.username, user.password):
         raise HTTPException(status_code=400, detail="用户名已存在")
     
-    return {"message": "注册成功", "username": user.username}
+    return UserRegisterResponse(message="注册成功", username=user.username)

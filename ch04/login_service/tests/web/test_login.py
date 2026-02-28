@@ -1,5 +1,8 @@
+import uuid
+import pytest
 from fastapi.testclient import TestClient
 from main import app
+from core import db
 
 client = TestClient(app)
 
@@ -7,9 +10,12 @@ client = TestClient(app)
 class TestLogin:
     """用户登录接口测试"""
 
+    def setup_method(self):
+        """每个测试方法前清理数据库"""
+        db.clear_db()
+
     def test_login_success(self):
         """测试登录成功"""
-        import uuid
         username = f"login_user_{uuid.uuid4().hex[:8]}"
         password = "correct_password"
         
@@ -32,7 +38,6 @@ class TestLogin:
 
     def test_login_wrong_password(self):
         """测试密码错误"""
-        import uuid
         username = f"login_user_{uuid.uuid4().hex[:8]}"
         password = "correct_password"
         
