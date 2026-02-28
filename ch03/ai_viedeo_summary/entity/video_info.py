@@ -1,6 +1,7 @@
 import os
 import cv2
 from config.constants import FILE_SIZE_UNITS
+from utils.format import format_duration, format_size
 
 
 class VideoInfo:
@@ -29,18 +30,9 @@ class VideoInfo:
     @property
     def size_str(self) -> str:
         """格式化文件大小"""
-        size = self.size
-        for unit in FILE_SIZE_UNITS:
-            if size < 1024:
-                return f"{size:.2f} {unit}"
-            size /= 1024
-        return f"{size:.2f} PB"
+        return format_size(self.size)
 
     @property
     def duration_str(self) -> str:
         """格式化视频时长"""
-        total_seconds = int(self.duration)
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        seconds = total_seconds % 60
-        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        return format_duration(int(self.duration))

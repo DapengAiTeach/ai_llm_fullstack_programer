@@ -15,7 +15,7 @@ from config.constants import (
     VIDEO_EXTENSIONS, FILE_SIZE_UNITS,
 )
 from entity.video_info import VideoInfo
-
+from utils.format import format_duration, format_size
 
 class MainWindow(QMainWindow):
     """主窗口"""
@@ -191,24 +191,10 @@ class MainWindow(QMainWindow):
         total_duration = sum([video.duration for video in self.video_list])
         total_size = sum([video.size for video in self.video_list])
 
-        # TODO: 总时长和总大小格式化代码重复，需要抽离为工具类方法
         # 格式化总时长
-        total_seconds = int(total_duration)
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        seconds = total_seconds % 60
-        total_duration_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-
+        total_duration_str = format_duration(int(total_duration))
         # 格式化总大小
-        size = total_size
-        total_size_str = ""
-        for unit in FILE_SIZE_UNITS:
-            if size < 1024:
-                total_size_str = f"{size:.2f} {unit}"
-                break
-            size /= 1024
-        else:
-            total_size_str = f"{size:.2f} PB"
+        total_size_str = format_size(total_size)
 
         # 更新统计信息
         summary_str = f"视频数量：{count} | 总时长：{total_duration_str} | 总大小：{total_size_str}"
