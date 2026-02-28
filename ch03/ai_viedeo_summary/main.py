@@ -1,31 +1,25 @@
 import sys
 import os
-import cv2
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout, QPushButton,
-    QLabel, QLineEdit, QTableWidget,
+    QLabel, QTableWidget,
     QTableWidgetItem, QFileDialog, QGroupBox,
     QHeaderView, QAbstractItemView, QMessageBox
 )
 from PyQt6.QtCore import Qt
+from services.video_service import VideService
+from config.loguru import logger
 
-from config.constants import (
-    VIDEO_EXTENSIONS, FILE_SIZE_UNITS,
-)
-from entity.video_info import VideoInfo
-from utils.format import format_duration, format_size
 
 class MainWindow(QMainWindow):
     """主窗口"""
 
     def __init__(self):
         super().__init__()
-        # 当前选中的目录
-        self.current_dir = ""
-        # 当前的视频列表
-        self.video_list: list[VideoInfo] = []
+        # 视频业务处理类
+        self.video_service = VideService()
         # 初始化UI界面
         self.init_ui()
 
@@ -117,23 +111,28 @@ class MainWindow(QMainWindow):
         """选择目录"""
         dir_path = QFileDialog.getExistingDirectory(self, "选择视频目录")
         if dir_path:
-            self.current_dir = dir_path
+            self.video_service.set_directory(dir_path)
+            logger.info(f"目录: {dir_path}")
             self.dir_label.setText(dir_path)
             self.dir_label.setStyleSheet("color: black;")
+            logger.info("开始扫描视频目录")
             self.scan_videos()
 
     def refresh_directory(self):
         """刷新目录"""
-        if self.current_dir and os.path.exists(self.current_dir):
+        logger.info("开始刷新视频目录")
+        if self.video_service.current_dir and os.path.exists(self.video_service.current_dir):
             self.scan_videos()
         else:
             self.dir_label.setText("未选择目录")
             self.dir_label.setStyleSheet("color: gray;")
+        logger.info("刷新视频目录完成")
 
     def export_list(self):
         """导出列表"""
+        logger.info("开始导出视频列表")
         # 检查列表是否为空
-        if not self.video_list:
+        if not self.video_service.video_list:
             QMessageBox.information(self, "提示", "列表为空")
             return
 
@@ -158,18 +157,18 @@ class MainWindow(QMainWindow):
 
         # 文本格式
         if ext == ".txt":
-            with open(file_path, "w", encoding="utf-8") as f:
-                for i, video in enumerate(self.video_list):
-                    f.write(f"{video.filename}\n")
+            self.video_service.export_txt(file_path)
             self.status_label.setText("导出成功")
+            logger.info("导出视频列表成功")
             QMessageBox.information(self, "提示", "导出成功")
         else:
             QMessageBox.warning(self, "错误", "不支持的文件格式")
 
     def update_table(self):
         """更新表格"""
-        self.table.setRowCount(len(self.video_list))
-        for i, video in enumerate(self.video_list):
+        logger.info("开始更新表格数据")
+        self.table.setRowCount(len(self.video_service.video_list))
+        for i, video in enumerate(self.video_service.video_list):
             # 序号
             self.table.setItem(i, 0, QTableWidgetItem(str(i + 1)))
             # 文件名
@@ -183,49 +182,25 @@ class MainWindow(QMainWindow):
             for col in [0, 2, 3]:
                 item = self.table.item(i, col)
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        logger.info("表格数据更新完成")
 
     def update_stats(self):
         """更新统计信息"""
-        # 数据统计
-        count = len(self.video_list)
-        total_duration = sum([video.duration for video in self.video_list])
-        total_size = sum([video.size for video in self.video_list])
-
-        # 格式化总时长
-        total_duration_str = format_duration(int(total_duration))
-        # 格式化总大小
-        total_size_str = format_size(total_size)
-
-        # 更新统计信息
-        summary_str = f"视频数量：{count} | 总时长：{total_duration_str} | 总大小：{total_size_str}"
+        logger.info("开始更新统计信息")
+        summary_str = self.video_service.get_summary()
         self.stats_label.setText(summary_str)
+        logger.info(f"统计信息更新完成: {summary_str}")
 
     def scan_videos(self):
         """扫描目录下的视频"""
+        logger.info("正在扫描视频目录")
         self.status_label.setText("正在扫描...")
-        self.video_list = []
-
-        # 遍历目录获取视频文件
-        for filename in os.listdir(self.current_dir):
-            filepath = os.path.join(self.current_dir, filename)
-            if os.path.isfile(filepath):
-                ext = ""
-                try:
-                    ext = os.path.splitext(filename)[1].lower()
-                except Exception as e:
-                    self.status_label.setText("获取文件后缀失败")
-                    print(e)
-                if ext in VIDEO_EXTENSIONS:
-                    try:
-                        # TODO: 获取视频信息
-                        vide_info = VideoInfo(filepath)
-                        self.video_list.append(vide_info)
-                    except Exception as e:
-                        self.status_label.setText("获取视频信息失败")
-                        print(e)
-
-        # 按文件名排序
-        self.video_list.sort(key=lambda x: x.filename.lower())
+        video_list, message = self.video_service.scan_videos()
+        logger.info(f"扫描完成，视频数量：{len(video_list)}, 错误信息：{message}")
+        if message:
+            self.status_label.setText("获取文件后缀失败")
+            QMessageBox.warning(self, "错误", message)
+            return
 
         # 更新界面
         self.update_table()
