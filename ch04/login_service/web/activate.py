@@ -1,30 +1,17 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
 from service.user_service import user_service
 from core.exceptions import UserNotFoundError, InvalidActivationKeyError
+from schema.user import UserActivateRequest, UserActivateResponse
 
 router = APIRouter()
 
 
-class ActivateRequest(BaseModel):
-    """激活请求模型"""
-    username: str = Field(..., description="用户名")
-    key: str = Field(..., description="激活密钥")
-
-
-class ActivateResponse(BaseModel):
-    """激活响应模型"""
-    message: str = Field(..., description="响应消息")
-    username: str = Field(..., description="用户名")
-    active: bool = Field(..., description="激活状态")
-
-
-@router.post("/activate", response_model=ActivateResponse)
-def activate(request: ActivateRequest):
+@router.post("/activate", response_model=UserActivateResponse)
+def activate(request: UserActivateRequest):
     """激活用户账号"""
     try:
         result = user_service.activate(request.username, request.key)
-        return ActivateResponse(
+        return UserActivateResponse(
             message="激活成功",
             username=result.username,
             active=result.active

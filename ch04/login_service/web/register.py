@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from service.user_service import user_service
 from core.exceptions import UserAlreadyExistsError
-from schema.register import UserRegisterRequest, UserRegisterResponse
+from schema.user import UserRegisterRequest, UserRegisterResponse
 
 router = APIRouter()
 

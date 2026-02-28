@@ -5,7 +5,7 @@ from core.exceptions import (
     InvalidPasswordError,
     UserNotActivatedError
 )
-from schema.login import UserLoginRequest, UserLoginResponse
+from schema.user import UserLoginRequest, UserLoginResponse
 
 router = APIRouter()
 
