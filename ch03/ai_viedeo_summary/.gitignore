@@ -1,4 +1,6 @@
 .idea
 venv
+dist
+build
 __pycache__
 logs/*
