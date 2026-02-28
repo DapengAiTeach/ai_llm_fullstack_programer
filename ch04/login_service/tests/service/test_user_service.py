@@ -2,7 +2,7 @@
 用户服务业务逻辑单元测试
 """
 import pytest
-from service.user_service import UserService
+from service.user_service import UserService, user_service
 from core.exceptions import (
     UserAlreadyExistsError,
     UserNotFoundError,
@@ -10,15 +10,14 @@ from core.exceptions import (
     UserNotActivatedError,
     InvalidActivationKeyError
 )
-from core import db
 
 
 @pytest.fixture
 def service():
     """创建服务实例并清理数据库"""
-    db.clear_db()
+    UserService.clear_all_users()
     yield UserService()
-    db.clear_db()
+    UserService.clear_all_users()
 
 
 class TestUserServiceRegister:
@@ -201,12 +200,13 @@ class TestUserServiceDeleteUser:
     def test_delete_user_success(self, service):
         """测试删除用户成功"""
         service.register("testuser", "password123")
-        assert db.user_exists("testuser") is True
         
         result = service.delete_user("testuser")
         
         assert result is True
-        assert db.user_exists("testuser") is False
+        # 验证用户已被删除
+        info = service.get_user_info("testuser")
+        assert info is None
 
     def test_delete_user_not_exist(self, service):
         """测试删除不存在的用户"""

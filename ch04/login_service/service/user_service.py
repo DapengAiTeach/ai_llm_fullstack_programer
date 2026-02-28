@@ -3,8 +3,9 @@
 处理用户注册、登录、激活等核心业务逻辑
 """
 from typing import Optional
-from model.user import User
-from core import db
+from sqlmodel import select
+from core.db import get_session
+from model.user import User, hash_password
 from core.exceptions import (
     UserAlreadyExistsError,
     UserNotFoundError,
@@ -16,6 +17,21 @@ from core.exceptions import (
 
 class UserService:
     """用户服务类"""
+
+    @staticmethod
+    def _get_user_from_db(username: str) -> Optional[User]:
+        """从数据库获取用户（内部方法）"""
+        with get_session() as session:
+            return session.get(User, username)
+
+    @staticmethod
+    def _save_user(user: User) -> User:
+        """保存用户到数据库（内部方法）"""
+        with get_session() as session:
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+            return user
 
     @staticmethod
     def register(username: str, password: str) -> User:
@@ -32,14 +48,15 @@ class UserService:
         Raises:
             UserAlreadyExistsError: 用户已存在
         """
-        if db.user_exists(username):
-            raise UserAlreadyExistsError("用户名已存在")
+        # 检查用户是否已存在
+        with get_session() as session:
+            existing_user = session.get(User, username)
+            if existing_user is not None:
+                raise UserAlreadyExistsError("用户名已存在")
         
-        user = db.create_user(username, password)
-        if user is None:
-            raise UserAlreadyExistsError("用户名已存在")
-        
-        return user
+        # 创建新用户
+        user = User(username=username, password=hash_password(password))
+        return UserService._save_user(user)
 
     @staticmethod
     def login(username: str, password: str) -> User:
@@ -58,7 +75,7 @@ class UserService:
             InvalidPasswordError: 密码错误
             UserNotActivatedError: 用户未激活
         """
-        user = db.get_user(username)
+        user = UserService._get_user_from_db(username)
         if user is None:
             raise UserNotFoundError("用户名或密码错误")
         
@@ -70,8 +87,7 @@ class UserService:
         
         # 更新登录时间
         user.update_login_time()
-        
-        return user
+        return UserService._save_user(user)
 
     @staticmethod
     def activate(username: str, key: str) -> User:
@@ -89,14 +105,14 @@ class UserService:
             UserNotFoundError: 用户不存在
             InvalidActivationKeyError: 激活密钥错误
         """
-        user = db.get_user(username)
+        user = UserService._get_user_from_db(username)
         if user is None:
             raise UserNotFoundError("用户不存在")
         
         if not user.activate(key):
             raise InvalidActivationKeyError("激活密钥错误")
         
-        return user
+        return UserService._save_user(user)
 
     @staticmethod
     def get_user_info(username: str) -> Optional[dict]:
@@ -109,7 +125,7 @@ class UserService:
         Returns:
             dict: 用户信息字典，用户不存在返回 None
         """
-        user = db.get_user(username)
+        user = UserService._get_user_from_db(username)
         if user is None:
             return None
         return user.to_dict()
@@ -134,12 +150,12 @@ class UserService:
         Raises:
             UserNotFoundError: 用户不存在
         """
-        user = db.get_user(username)
+        user = UserService._get_user_from_db(username)
         if user is None:
             raise UserNotFoundError("用户不存在")
         
         user.update_info(nickname=nickname, avatar=avatar)
-        return user
+        return UserService._save_user(user)
 
     @staticmethod
     def change_password(username: str, old_password: str, new_password: str) -> User:
@@ -158,7 +174,7 @@ class UserService:
             UserNotFoundError: 用户不存在
             InvalidPasswordError: 旧密码错误
         """
-        user = db.get_user(username)
+        user = UserService._get_user_from_db(username)
         if user is None:
             raise UserNotFoundError("用户不存在")
         
@@ -166,7 +182,7 @@ class UserService:
             raise InvalidPasswordError("原密码错误")
         
         user.update_info(password=new_password)
-        return user
+        return UserService._save_user(user)
 
     @staticmethod
     def delete_user(username: str) -> bool:
@@ -179,7 +195,23 @@ class UserService:
         Returns:
             bool: 删除成功返回 True，用户不存在返回 False
         """
-        return db.delete_user(username)
+        with get_session() as session:
+            user = session.get(User, username)
+            if user is None:
+                return False
+            session.delete(user)
+            session.commit()
+            return True
+
+    @staticmethod
+    def clear_all_users():
+        """清空所有用户（仅用于测试）"""
+        with get_session() as session:
+            statement = select(User)
+            users = session.exec(statement).all()
+            for user in users:
+                session.delete(user)
+            session.commit()
 
 
 # 创建服务实例

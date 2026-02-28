@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from core import db
 
+# 创建数据库表
+db.create_tables()
+
 app = FastAPI(title="用户登录服务")
 
 

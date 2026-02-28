@@ -2,7 +2,7 @@ import uuid
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from core import db
+from service.user_service import UserService
 
 client = TestClient(app)
 
@@ -12,7 +12,7 @@ class TestRegister:
 
     def setup_method(self):
         """每个测试方法前清理数据库"""
-        db.clear_db()
+        UserService.clear_all_users()
 
     def test_register_success(self):
         """测试注册成功"""
@@ -27,6 +27,8 @@ class TestRegister:
         data = response.json()
         assert data["message"] == "注册成功"
         assert data["username"] == username
+        assert "key" in data  # 返回激活密钥
+        assert data["active"] is False  # 新用户未激活
 
     def test_register_duplicate_username(self):
         """测试重复用户名注册失败"""

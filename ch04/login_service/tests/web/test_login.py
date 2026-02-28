@@ -2,7 +2,7 @@ import uuid
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from core import db
+from service.user_service import UserService
 
 client = TestClient(app)
 
@@ -12,7 +12,7 @@ class TestLogin:
 
     def setup_method(self):
         """每个测试方法前清理数据库"""
-        db.clear_db()
+        UserService.clear_all_users()
 
     def test_login_success(self):
         """测试登录成功（已激活用户）"""
@@ -28,7 +28,7 @@ class TestLogin:
         
         # 获取激活密钥并激活用户
         key = response1.json()["key"]
-        db.activate_user(username, key)
+        UserService.activate(username, key)
         
         # 再登录
         response = client.post("/login", json={
@@ -73,7 +73,7 @@ class TestLogin:
             "password": password
         })
         key = response1.json()["key"]
-        db.activate_user(username, key)
+        UserService.activate(username, key)
         
         # 用错误密码登录
         response = client.post("/login", json={

@@ -5,7 +5,7 @@ import uuid
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from core import db
+from service.user_service import UserService
 
 client = TestClient(app)
 
@@ -15,7 +15,7 @@ class TestActivate:
 
     def setup_method(self):
         """每个测试方法前清理数据库"""
-        db.clear_db()
+        UserService.clear_all_users()
 
     def test_activate_success(self):
         """测试激活成功"""
