@@ -39,3 +39,5 @@ class UserRegisterResponse(BaseModel):
     """用户注册响应模型"""
     message: str = Field(..., description="响应消息")
     username: str = Field(..., description="用户名")
+    key: str = Field(..., description="激活密钥")
+    active: bool = Field(..., description="是否已激活")

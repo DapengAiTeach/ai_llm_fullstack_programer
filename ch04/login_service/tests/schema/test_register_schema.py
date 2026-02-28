@@ -98,12 +98,26 @@ class TestUserRegisterResponse:
 
     def test_valid_register_response(self):
         """测试有效的注册响应"""
-        response = UserRegisterResponse(message="注册成功", username="testuser")
+        response = UserRegisterResponse(
+            message="注册成功",
+            username="testuser",
+            key="test_key_123",
+            active=False
+        )
         assert response.message == "注册成功"
         assert response.username == "testuser"
+        assert response.key == "test_key_123"
+        assert response.active is False
 
     def test_register_response_with_different_message(self):
         """测试不同消息的注册响应"""
-        response = UserRegisterResponse(message="Welcome!", username="alice")
+        response = UserRegisterResponse(
+            message="Welcome!",
+            username="alice",
+            key="activation_key_abc",
+            active=True
+        )
         assert response.message == "Welcome!"
         assert response.username == "alice"
+        assert response.key == "activation_key_abc"
+        assert response.active is True

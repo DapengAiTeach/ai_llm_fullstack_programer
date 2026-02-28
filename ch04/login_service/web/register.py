@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from core import db
+from service.user_service import user_service
+from core.exceptions import UserAlreadyExistsError
 from schema.register import UserRegisterRequest, UserRegisterResponse
 
 router = APIRouter()
@@ -8,7 +9,13 @@ router = APIRouter()
 @router.post("/register", response_model=UserRegisterResponse)
 def register(user: UserRegisterRequest):
     """用户注册"""
-    if not db.create_user(user.username, user.password):
-        raise HTTPException(status_code=400, detail="用户名已存在")
-    
-    return UserRegisterResponse(message="注册成功", username=user.username)
+    try:
+        result = user_service.register(user.username, user.password)
+        return UserRegisterResponse(
+            message="注册成功",
+            username=result.username,
+            key=result.key,
+            active=result.active
+        )
+    except UserAlreadyExistsError as e:
+        raise HTTPException(status_code=400, detail=str(e))

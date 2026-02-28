@@ -15,15 +15,20 @@ class TestLogin:
         db.clear_db()
 
     def test_login_success(self):
-        """测试登录成功"""
+        """测试登录成功（已激活用户）"""
         username = f"login_user_{uuid.uuid4().hex[:8]}"
         password = "correct_password"
         
         # 先注册
-        client.post("/register", json={
+        response1 = client.post("/register", json={
             "username": username,
             "password": password
         })
+        assert response1.status_code == 200
+        
+        # 获取激活密钥并激活用户
+        key = response1.json()["key"]
+        db.activate_user(username, key)
         
         # 再登录
         response = client.post("/login", json={
@@ -35,17 +40,40 @@ class TestLogin:
         data = response.json()
         assert data["message"] == "登录成功"
         assert data["username"] == username
+        assert data["nickname"] == username  # 默认昵称为用户名
+
+    def test_login_not_activated(self):
+        """测试未激活用户无法登录"""
+        username = f"login_user_{uuid.uuid4().hex[:8]}"
+        password = "correct_password"
+        
+        # 先注册（未激活）
+        client.post("/register", json={
+            "username": username,
+            "password": password
+        })
+        
+        # 尝试登录（未激活）
+        response = client.post("/login", json={
+            "username": username,
+            "password": password
+        })
+        
+        assert response.status_code == 400
+        assert "用户未激活" in response.json()["detail"]
 
     def test_login_wrong_password(self):
         """测试密码错误"""
         username = f"login_user_{uuid.uuid4().hex[:8]}"
         password = "correct_password"
         
-        # 先注册
-        client.post("/register", json={
+        # 先注册并激活
+        response1 = client.post("/register", json={
             "username": username,
             "password": password
         })
+        key = response1.json()["key"]
+        db.activate_user(username, key)
         
         # 用错误密码登录
         response = client.post("/login", json={

@@ -39,3 +39,4 @@ class UserLoginResponse(BaseModel):
     """用户登录响应模型"""
     message: str = Field(..., description="响应消息")
     username: str = Field(..., description="用户名")
+    nickname: str = Field(..., description="昵称")
