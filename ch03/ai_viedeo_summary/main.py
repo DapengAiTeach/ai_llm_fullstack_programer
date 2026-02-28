@@ -11,17 +11,9 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 
-# TODO：常量，后续需要拆分到子模块
-# 视频文件扩展名
-VIDEO_EXTENSIONS = {
-    ".mp4", ".avi", ".mkv",
-    ".wmv", ".flv", ".webm",
-    ".m4v", ".mpg", ".mpeg",
-    ".3gp",
-}
-# 文件大小单位
-FILE_SIZE_UNITS = ["B", "KB", "MB", "GB", "TB"]
-
+from config.constants import (
+    VIDEO_EXTENSIONS, FILE_SIZE_UNITS,
+)
 
 # TODO：类，后续需要拆分到子模块
 class VideoInfo:
