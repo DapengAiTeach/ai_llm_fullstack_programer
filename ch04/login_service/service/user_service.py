@@ -5,7 +5,8 @@
 from typing import Optional
 from sqlmodel import select
 from core.db import get_session
-from model.user import User, hash_password
+from model.user import User
+from util.password_util import hash_password, verify_password
 from core.exceptions import (
     UserAlreadyExistsError,
     UserNotFoundError,
@@ -79,7 +80,7 @@ class UserService:
         if user is None:
             raise UserNotFoundError("用户名或密码错误")
         
-        if not user.verify_password(password):
+        if not verify_password(password, user.password):
             raise InvalidPasswordError("用户名或密码错误")
         
         if not user.active:
@@ -178,7 +179,7 @@ class UserService:
         if user is None:
             raise UserNotFoundError("用户不存在")
         
-        if not user.verify_password(old_password):
+        if not verify_password(old_password, user.password):
             raise InvalidPasswordError("原密码错误")
         
         user.update_info(password=new_password)

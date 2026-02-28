@@ -3,19 +3,8 @@
 """
 from datetime import datetime
 from typing import Optional
-import secrets
-import hashlib
 from sqlmodel import SQLModel, Field
-
-
-def hash_password(password: str) -> str:
-    """对密码进行哈希处理"""
-    return hashlib.sha256(password.encode()).hexdigest()
-
-
-def generate_key() -> str:
-    """生成随机的激活密钥"""
-    return secrets.token_urlsafe(32)
+from util.password_util import hash_password, generate_activation_key
 
 
 class User(SQLModel, table=True):
@@ -36,7 +25,7 @@ class User(SQLModel, table=True):
     active: bool = Field(default=False, description="是否激活")
     
     # 用于激活用户的密钥
-    key: str = Field(default_factory=generate_key, description="激活密钥")
+    key: str = Field(default_factory=generate_activation_key, description="激活密钥")
     
     # 上次登录时间
     login_time: Optional[datetime] = Field(default=None, description="上次登录时间")
@@ -61,7 +50,8 @@ class User(SQLModel, table=True):
     
     def verify_password(self, password: str) -> bool:
         """验证密码是否正确"""
-        return self.password == hash_password(password)
+        from util.password_util import verify_password as _verify
+        return _verify(password, self.password)
     
     def set_password(self, password: str):
         """设置密码（自动哈希）"""
