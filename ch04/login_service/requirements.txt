@@ -1,6 +1,0 @@
-fastapi==0.134.0
-uvicorn==0.41.0
-httpx==0.28.1
-pytest==9.0.2
-sqlmodel==0.0.23
-aiosqlite==0.20.0
