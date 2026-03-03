@@ -10,14 +10,16 @@
 <body>
 <h1>聊天机器人首页</h1>
 <form action="/" method="post">
+    {% csrf_token %}
     {#聊天输入框#}
     <input type="text" id="message" name="message"/>
     {#确认按钮#}
     <button type="submit" id="send">发送</button>
 </form>
 {#AI的答复#}
+<h2>AI的答复</h2>
 <div id="answer">
-    <p id="answer-text">AI的答复</p>
+    <p id="answer-text">{{ answer }}</p>
 </div>
 </body>
 </html>
