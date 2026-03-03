@@ -28,6 +28,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # 自定义的APP
+    'apps.chatbot',
+    'apps.home',
 ]
 
 # 中间件，顺序不能乱，且非常重要
