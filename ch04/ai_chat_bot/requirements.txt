@@ -1,6 +1,0 @@
-openai==2.24.0
-python-dotenv==1.2.1
-pyqt6==6.10.2
-opencv-python==4.13.0.92
-loguru==0.7.3
-pyinstaller==6.19.0
