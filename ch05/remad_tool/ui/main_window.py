@@ -110,6 +110,69 @@ class MainWindow(QMainWindow):
 
     def remove_advertisements(self):
         """移除广告"""
+        # 获取用户选择的目录
+        directory = self.dir_input.text().strip()
+        if not directory:
+            QMessageBox.warning(self, "错误", "请选择要处理的目录")
+            return
+        if not Path(directory).exists():
+            QMessageBox.warning(self, "错误", "指定的目录不存在")
+            return
+
+        # 更新广告词模式
+        patterns_text = self.patterns_text.toPlainText().strip()
+        if patterns_text:
+            self.ad_patterns = [p.strip() for p in patterns_text.split("\n") if p.strip()]
+        else:
+            self.ad_patterns = DEFAULT_AD_PATTERNS
+
+        # 开始处理目录
+        self.remove_btn.setEnabled(False)
+        self.browse_btn.setEnabled(False)
+        self.progress_bar.setValue(0)
+        self.log_text.clear()
+        self.status_label.setText("处理中...")
+        self.log_text.appendPlainText(f"开始处理目录: {directory}")
+        self.log_text.appendPlainText(f"广告词匹配规则数量: {len(self.ad_patterns)}")
+        self.log_text.appendPlainText("-" * 30)
+        logger.info(f"开始处理目录: {directory}")
+
+        # 创建并启动工作线程
+        self.worker_thread = AdRemoverWorker(directory, self.ad_patterns)
+        self.worker_thread.log_signal.connect(self.append_log)
+        self.worker_thread.progress_signal.connect(self.update_progress)
+        self.worker_thread.finished_signal.connect(self.handle_finished)
+        self.worker_thread.start()
 
     def clear_log(self):
         """清空日志"""
+        self.log_text.clear()
+        self.status_label.setText("日志已清空")
+        logger.info("已清空日志")
+
+    def append_log(self, log):
+        """追加日志"""
+        self.log_text.appendPlainText(log)
+
+    def update_progress(self, progress):
+        """更新进度"""
+        self.progress_bar.setValue(progress)
+
+    def handle_finished(self, total_items, renamed_count):
+        """处理完成"""
+        self.remove_btn.setEnabled(True)
+        self.browse_btn.setEnabled(True)
+        self.progress_bar.setValue(100)
+        self.status_label.setText(f"处理完成：{total_items} 项目, {renamed_count} 重命名")
+        self.log_text.appendPlainText("-" * 30)
+        self.log_text.appendPlainText(f"处理完成, 共处理 {total_items} 个项目, 重命名了 {renamed_count} 个项目")
+        logger.info(f"处理完成, 共处理 {total_items} 个项目, 重命名了 {renamed_count} 个项目")
+        QMessageBox.information(self, "完成", f"处理完成, 共处理 {total_items} 个项目, 重命名了 {renamed_count} 个项目")
+
+    def closeEvent(self, event):
+        """优雅关闭窗口"""
+        if self.worker_thread and self.worker_thread.isRunning():
+            self.worker_thread.terminate()
+            self.worker_thread.wait()
+            logger.info("已关闭处理线程")
+        event.accept()
