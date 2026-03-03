@@ -167,7 +167,7 @@ class MainWindow(QMainWindow):
         self.log_text.appendPlainText("-" * 30)
         self.log_text.appendPlainText(f"处理完成, 共处理 {total_items} 个项目, 重命名了 {renamed_count} 个项目")
         logger.info(f"处理完成, 共处理 {total_items} 个项目, 重命名了 {renamed_count} 个项目")
-        QMessageBox.information(self, "完成", f"处理完成, 共处理 {total_items} 个项目, 重命名了 {renamed_count} 个项目")
+        QMessageBox.information(self, "完成", f"共处理 {total_items} 个项目, 重命名了 {renamed_count} 个项目")
 
     def closeEvent(self, event):
         """优雅关闭窗口"""

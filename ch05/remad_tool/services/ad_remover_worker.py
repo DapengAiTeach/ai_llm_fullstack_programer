@@ -135,5 +135,5 @@ class AdRemoverWorker(QThread):
                         self.log_signal.emit(error_msg)
                         logger.error(error_msg)
 
-            logger.info(f"处理完成, 共处理 {processed_count} 个项目, 重命名了 {renamed_count} 个项目")
-            self.finished_signal.emit(processed_count, renamed_count)
+        logger.info(f"处理完成, 共处理 {processed_count} 个项目, 重命名了 {renamed_count} 个项目")
+        self.finished_signal.emit(processed_count, renamed_count)
