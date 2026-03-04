@@ -26,8 +26,10 @@ class AdRemoverWorker(QThread):
         """从文件名中删除广告词"""
         new_name = name
         for pattern in self.ad_patterns:
+            # 转义正则特殊字符，确保作为普通文本匹配
+            escaped_pattern = re.escape(pattern)
             # 替换广告词为空
-            new_name = re.sub(pattern, '', new_name, flags=re.IGNORECASE)
+            new_name = re.sub(escaped_pattern, '', new_name, flags=re.IGNORECASE)
         return new_name.strip()
 
     def run(self):
