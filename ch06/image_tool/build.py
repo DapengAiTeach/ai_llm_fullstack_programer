@@ -4,7 +4,7 @@ import shutil
 import subprocess
 
 # 配置
-APP_NAME = "AdRemoverTool"
+APP_NAME = "ImageTool"
 MAIN_SCRIPT = "main.py"
 ICON_FILE = ""
 
@@ -39,13 +39,14 @@ hidden_imports = [
     "PyQt6.QtWidgets",
     # 第三方库
     "loguru",
+    "pillow",
     # 项目模块
     "config",
     "config.common",
     "config.constants",
     "config.loguru",
     "services",
-    "services.ad_remover_worker",
+    "services.image_resize_worker",
     "ui",
     "ui.main_window",
 ]
