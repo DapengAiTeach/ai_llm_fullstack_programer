@@ -6,10 +6,11 @@ from PyQt6.QtWidgets import (
     QHBoxLayout, QPushButton, QLabel,
     QLineEdit, QFileDialog, QMessageBox,
     QSpinBox, QGroupBox, QSplitter,
+    QComboBox,
 )
 from PyQt6.QtGui import QPixmap
 from services import ImageResizeWorker
-from config import logger, SUPPORTED_IMAGE_EXTENSIONS, DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT
+from config import logger, SUPPORTED_IMAGE_EXTENSIONS, DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT, SIZE_PRESETS
 
 
 class MainWindow(QMainWindow):
@@ -68,6 +69,18 @@ class MainWindow(QMainWindow):
         # ===== 左侧：尺寸设置区域 =====
         size_group = QGroupBox("尺寸设置")
         size_layout = QVBoxLayout(size_group)
+
+        # 预设选择
+        preset_layout = QHBoxLayout()
+        preset_layout.addWidget(QLabel("预设:"))
+        self.preset_combo = QComboBox()
+        self.preset_combo.addItem("自定义")
+        for preset_name in SIZE_PRESETS.keys():
+            self.preset_combo.addItem(preset_name)
+        self.preset_combo.currentTextChanged.connect(self.on_preset_changed)
+        preset_layout.addWidget(self.preset_combo)
+        preset_layout.addStretch()
+        size_layout.addLayout(preset_layout)
 
         # 宽度设置
         width_layout = QHBoxLayout()
@@ -186,6 +199,13 @@ class MainWindow(QMainWindow):
             self.height_spin.setValue(pixmap.height())
 
         self.log_label.setText(f"图片: {Path(image_path).name}")
+
+    def on_preset_changed(self, preset_name):
+        """尺寸预设选择改变"""
+        if preset_name in SIZE_PRESETS:
+            width, height = SIZE_PRESETS[preset_name]
+            self.width_spin.setValue(width)
+            self.height_spin.setValue(height)
 
     def preview_image(self):
         """预览调整后的图片"""

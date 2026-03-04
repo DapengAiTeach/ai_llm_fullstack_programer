@@ -6,3 +6,10 @@ SUPPORTED_IMAGE_EXTENSIONS = [
 # 默认图片尺寸
 DEFAULT_IMAGE_WIDTH = 800
 DEFAULT_IMAGE_HEIGHT = 600
+
+# 尺寸预设
+SIZE_PRESETS = {
+    "横屏": (960, 600),
+    "竖屏": (412, 550),
+    "方形": (1000, 1000),
+}
