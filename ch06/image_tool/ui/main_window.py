@@ -4,175 +4,295 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout,
     QHBoxLayout, QPushButton, QLabel,
-    QLineEdit, QPlainTextEdit, QProgressBar,
-    QFileDialog, QMessageBox,
+    QLineEdit, QFileDialog, QMessageBox,
+    QSpinBox, QGroupBox, QSplitter,
 )
-from services import AdRemoverWorker
-from config import logger, DEFAULT_AD_PATTERNS
+from PyQt6.QtGui import QPixmap
+from services import ImageResizeWorker
+from config import logger, SUPPORTED_IMAGE_EXTENSIONS, DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT
 
 
 class MainWindow(QMainWindow):
-    """去广告工具主窗口"""
+    """图像尺寸修改工具主窗口"""
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("去广告工具")
-        self.setMinimumSize(700, 500)
+        self.setWindowTitle("图像尺寸修改工具")
+        self.setMinimumSize(900, 600)
         self.worker_thread = None
-        self.ad_patterns = DEFAULT_AD_PATTERNS
+        self.current_image_path = None
+        self.preview_image_path = None
         self.init_ui()
 
     def init_ui(self):
         """初始化用户界面"""
-        ######################中央部件开始######################
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
         main_layout.setSpacing(15)
         main_layout.setContentsMargins(20, 20, 20, 20)
-        ######################中央部件结束######################
 
-        ######################顶部目录选择开始######################
-        dir_layout = QHBoxLayout()
-        main_layout.addLayout(dir_layout)
+        # 使用分割器
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        main_layout.addWidget(splitter)
 
-        dir_label = QLabel("目标目录:")
-        dir_layout.addWidget(dir_label)
+        # 左侧控制面板
+        left_panel = QWidget()
+        left_layout = QVBoxLayout(left_panel)
+        left_layout.setSpacing(15)
+        splitter.addWidget(left_panel)
 
-        self.dir_input = QLineEdit()
-        self.dir_input.setPlaceholderText("请选择要处理的目录...")
-        dir_layout.addWidget(self.dir_input, 1)
+        # 右侧预览面板
+        right_panel = QWidget()
+        right_layout = QVBoxLayout(right_panel)
+        splitter.addWidget(right_panel)
 
-        self.browse_btn = QPushButton("浏览")
-        self.browse_btn.clicked.connect(self.browse_directory)
-        dir_layout.addWidget(self.browse_btn)
-        ######################顶部目录选择结束######################
+        splitter.setSizes([350, 550])
 
-        ######################广告词模式选择区域开始######################
-        patterns_label = QLabel("广告词匹配规则:")
-        main_layout.addWidget(patterns_label)
+        # ===== 左侧：图片选择区域 =====
+        file_group = QGroupBox("图片选择")
+        file_layout = QHBoxLayout(file_group)
 
-        self.patterns_text = QPlainTextEdit()
-        self.patterns_text.setPlainText("\n".join(self.ad_patterns))
-        self.patterns_text.setMaximumHeight(120)
-        main_layout.addWidget(self.patterns_text)
-        ######################广告词模式选择区域结束######################
+        self.file_input = QLineEdit()
+        self.file_input.setPlaceholderText("请选择要处理的图片...")
+        self.file_input.setReadOnly(True)
+        file_layout.addWidget(self.file_input)
 
-        ######################操作按钮区域开始######################
+        self.browse_btn = QPushButton("浏览...")
+        self.browse_btn.clicked.connect(self.browse_image)
+        file_layout.addWidget(self.browse_btn)
+
+        left_layout.addWidget(file_group)
+
+        # ===== 左侧：尺寸设置区域 =====
+        size_group = QGroupBox("尺寸设置")
+        size_layout = QVBoxLayout(size_group)
+
+        # 宽度设置
+        width_layout = QHBoxLayout()
+        width_layout.addWidget(QLabel("宽度:"))
+        self.width_spin = QSpinBox()
+        self.width_spin.setRange(1, 10000)
+        self.width_spin.setValue(DEFAULT_IMAGE_WIDTH)
+        self.width_spin.setSuffix(" px")
+        width_layout.addWidget(self.width_spin)
+        width_layout.addStretch()
+        size_layout.addLayout(width_layout)
+
+        # 高度设置
+        height_layout = QHBoxLayout()
+        height_layout.addWidget(QLabel("高度:"))
+        self.height_spin = QSpinBox()
+        self.height_spin.setRange(1, 10000)
+        self.height_spin.setValue(DEFAULT_IMAGE_HEIGHT)
+        self.height_spin.setSuffix(" px")
+        height_layout.addWidget(self.height_spin)
+        height_layout.addStretch()
+        size_layout.addLayout(height_layout)
+
+        left_layout.addWidget(size_group)
+
+        # ===== 左侧：操作按钮区域 =====
         button_layout = QHBoxLayout()
-        main_layout.addLayout(button_layout)
-        button_layout.addStretch()
 
-        self.remove_btn = QPushButton("移除广告")
-        self.remove_btn.clicked.connect(self.remove_advertisements)
-        button_layout.addWidget(self.remove_btn)
+        self.preview_btn = QPushButton("预览")
+        self.preview_btn.clicked.connect(self.preview_image)
+        self.preview_btn.setEnabled(False)
+        button_layout.addWidget(self.preview_btn)
 
-        self.clear_btn = QPushButton("清空日志")
-        self.clear_btn.clicked.connect(self.clear_log)
-        button_layout.addWidget(self.clear_btn)
+        self.save_btn = QPushButton("保存图片")
+        self.save_btn.clicked.connect(self.save_image)
+        self.save_btn.setEnabled(False)
+        button_layout.addWidget(self.save_btn)
 
-        button_layout.addStretch()
-        ######################操作按钮区域结束######################
+        left_layout.addLayout(button_layout)
 
-        ######################进度条区域开始######################
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 100)
-        self.progress_bar.setValue(0)
-        main_layout.addWidget(self.progress_bar)
-        ######################进度条区域结束######################
+        # ===== 左侧：日志区域 =====
+        log_group = QGroupBox("处理日志")
+        log_layout = QVBoxLayout(log_group)
 
-        ######################日志显示区域开始######################
-        log_label = QLabel("处理日志:")
-        main_layout.addWidget(log_label)
+        self.log_label = QLabel("就绪")
+        log_layout.addWidget(self.log_label)
 
-        self.log_text = QPlainTextEdit()
-        self.log_text.setReadOnly(True)
-        main_layout.addWidget(self.log_text, 1)
-        ######################日志显示区域结束######################
+        left_layout.addWidget(log_group)
+        left_layout.addStretch()
 
-        ######################状态栏区域开始######################
-        self.status_label = QLabel("就绪")
-        self.status_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        main_layout.addWidget(self.status_label)
-        ######################状态栏区域结束######################
+        # ===== 右侧：图片预览区域 =====
+        preview_group = QGroupBox("图片预览")
+        preview_layout = QVBoxLayout(preview_group)
 
-    def browse_directory(self):
-        """浏览目录"""
-        directory = QFileDialog.getExistingDirectory(
+        # 原始图片标签
+        original_label = QLabel("原始图片:")
+        preview_layout.addWidget(original_label)
+
+        self.original_image_label = QLabel()
+        self.original_image_label.setMinimumHeight(200)
+        self.original_image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.original_image_label.setStyleSheet("background-color: #f0f0f0; border: 1px solid #ccc;")
+        self.original_image_label.setText("未选择图片")
+        preview_layout.addWidget(self.original_image_label)
+
+        # 处理后的图片标签
+        resized_label = QLabel("调整后预览:")
+        preview_layout.addWidget(resized_label)
+
+        self.resized_image_label = QLabel()
+        self.resized_image_label.setMinimumHeight(200)
+        self.resized_image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.resized_image_label.setStyleSheet("background-color: #f0f0f0; border: 1px solid #ccc;")
+        self.resized_image_label.setText("点击预览按钮查看效果")
+        preview_layout.addWidget(self.resized_image_label)
+
+        right_layout.addWidget(preview_group)
+
+    def browse_image(self):
+        """浏览并选择图片"""
+        file_filter = "图片文件 (" + " ".join([f"*{ext}" for ext in SUPPORTED_IMAGE_EXTENSIONS]) + ")"
+        
+        file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "选择要处理的目录",
+            "选择图片",
             "",
-            QFileDialog.Option.ShowDirsOnly,
+            file_filter
         )
-        if directory:
-            self.dir_input.setText(directory)
-            logger.info(f"选择的目录: {directory}")
+        
+        if file_path:
+            self.current_image_path = file_path
+            self.file_input.setText(file_path)
+            self.preview_btn.setEnabled(True)
+            self.save_btn.setEnabled(True)
+            self.log_label.setText(f"已选择图片: {Path(file_path).name}")
+            logger.info(f"选择的图片: {file_path}")
+            
+            # 显示原始图片
+            self.display_original_image(file_path)
 
-    def remove_advertisements(self):
-        """移除广告"""
-        # 获取用户选择的目录
-        directory = self.dir_input.text().strip()
-        if not directory:
-            QMessageBox.warning(self, "错误", "请选择要处理的目录")
+    def display_original_image(self, image_path):
+        """显示原始图片"""
+        pixmap = QPixmap(image_path)
+        if not pixmap.isNull():
+            # 缩放以适应标签大小，保持比例
+            scaled_pixmap = pixmap.scaled(
+                self.original_image_label.size(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+            self.original_image_label.setPixmap(scaled_pixmap)
+            
+            # 显示尺寸信息
+            self.log_label.setText(f"原始尺寸: {pixmap.width()} x {pixmap.height()}")
+
+    def preview_image(self):
+        """预览调整后的图片"""
+        if not self.current_image_path:
+            QMessageBox.warning(self, "错误", "请先选择图片")
             return
-        if not Path(directory).exists():
-            QMessageBox.warning(self, "错误", "指定的目录不存在")
-            return
 
-        # 更新广告词模式
-        patterns_text = self.patterns_text.toPlainText().strip()
-        if patterns_text:
-            self.ad_patterns = [p.strip() for p in patterns_text.split("\n") if p.strip()]
-        else:
-            self.ad_patterns = DEFAULT_AD_PATTERNS
+        width = self.width_spin.value()
+        height = self.height_spin.value()
 
-        # 开始处理目录
-        self.remove_btn.setEnabled(False)
-        self.browse_btn.setEnabled(False)
-        self.progress_bar.setValue(0)
-        self.log_text.clear()
-        self.status_label.setText("处理中...")
-        self.log_text.appendPlainText(f"开始处理目录: {directory}")
-        self.log_text.appendPlainText(f"广告词匹配规则数量: {len(self.ad_patterns)}")
-        self.log_text.appendPlainText("-" * 30)
-        logger.info(f"开始处理目录: {directory}")
+        self.preview_btn.setEnabled(False)
+        self.save_btn.setEnabled(False)
+        self.log_label.setText("正在处理...")
 
-        # 创建并启动工作线程
-        self.worker_thread = AdRemoverWorker(directory, self.ad_patterns)
-        self.worker_thread.log_signal.connect(self.append_log)
-        self.worker_thread.progress_signal.connect(self.update_progress)
-        self.worker_thread.finished_signal.connect(self.handle_finished)
+        # 创建工作线程
+        self.worker_thread = ImageResizeWorker(
+            self.current_image_path,
+            width,
+            height,
+            preview_only=True
+        )
+        self.worker_thread.log_signal.connect(self.update_log)
+        self.worker_thread.preview_signal.connect(self.display_preview_image)
+        self.worker_thread.finished_signal.connect(self.handle_preview_finished)
         self.worker_thread.start()
 
-    def clear_log(self):
-        """清空日志"""
-        self.log_text.clear()
-        self.status_label.setText("日志已清空")
-        logger.info("已清空日志")
+    def display_preview_image(self, image_path):
+        """显示预览图片"""
+        self.preview_image_path = image_path
+        pixmap = QPixmap(image_path)
+        if not pixmap.isNull():
+            scaled_pixmap = pixmap.scaled(
+                self.resized_image_label.size(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+            self.resized_image_label.setPixmap(scaled_pixmap)
 
-    def append_log(self, log):
-        """追加日志"""
-        self.log_text.appendPlainText(log)
+    def save_image(self):
+        """保存调整后的图片"""
+        if not self.current_image_path:
+            QMessageBox.warning(self, "错误", "请先选择图片")
+            return
 
-    def update_progress(self, progress):
-        """更新进度"""
-        self.progress_bar.setValue(progress)
+        # 选择保存路径
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "保存图片",
+            str(Path(self.current_image_path).parent / f"{Path(self.current_image_path).stem}_resized{Path(self.current_image_path).suffix}"),
+            "图片文件 (" + " ".join([f"*{ext}" for ext in SUPPORTED_IMAGE_EXTENSIONS]) + ")"
+        )
 
-    def handle_finished(self, total_items, renamed_count):
-        """处理完成"""
-        self.remove_btn.setEnabled(True)
-        self.browse_btn.setEnabled(True)
-        self.progress_bar.setValue(100)
-        self.status_label.setText(f"处理完成：{total_items} 项目, {renamed_count} 重命名")
-        self.log_text.appendPlainText("-" * 30)
-        self.log_text.appendPlainText(f"处理完成, 共处理 {total_items} 个项目, 重命名了 {renamed_count} 个项目")
-        logger.info(f"处理完成, 共处理 {total_items} 个项目, 重命名了 {renamed_count} 个项目")
-        QMessageBox.information(self, "完成", f"共处理 {total_items} 个项目, 重命名了 {renamed_count} 个项目")
+        if not file_path:
+            return
+
+        width = self.width_spin.value()
+        height = self.height_spin.value()
+
+        self.preview_btn.setEnabled(False)
+        self.save_btn.setEnabled(False)
+        self.log_label.setText("正在保存...")
+
+        # 创建工作线程
+        self.worker_thread = ImageResizeWorker(
+            self.current_image_path,
+            width,
+            height,
+            output_path=file_path,
+            preview_only=False
+        )
+        self.worker_thread.log_signal.connect(self.update_log)
+        self.worker_thread.finished_signal.connect(self.handle_save_finished)
+        self.worker_thread.start()
+
+    def update_log(self, message):
+        """更新日志"""
+        self.log_label.setText(message)
+
+    def handle_preview_finished(self, success, message):
+        """预览完成处理"""
+        self.preview_btn.setEnabled(True)
+        self.save_btn.setEnabled(True)
+        
+        if success:
+            self.log_label.setText("预览生成完成")
+        else:
+            self.log_label.setText(f"处理失败: {message}")
+            QMessageBox.critical(self, "错误", f"处理失败: {message}")
+
+    def handle_save_finished(self, success, message):
+        """保存完成处理"""
+        self.preview_btn.setEnabled(True)
+        self.save_btn.setEnabled(True)
+        
+        if success:
+            self.log_label.setText(f"图片已保存: {message}")
+            QMessageBox.information(self, "完成", f"图片已成功保存到:\n{message}")
+        else:
+            self.log_label.setText(f"保存失败: {message}")
+            QMessageBox.critical(self, "错误", f"保存失败: {message}")
+
+    def resizeEvent(self, event):
+        """窗口大小改变时重新缩放图片"""
+        super().resizeEvent(event)
+        if self.current_image_path:
+            self.display_original_image(self.current_image_path)
+        if self.preview_image_path:
+            self.display_preview_image(self.preview_image_path)
 
     def closeEvent(self, event):
         """优雅关闭窗口"""
         if self.worker_thread and self.worker_thread.isRunning():
-            self.worker_thread.terminate()
-            self.worker_thread.wait()
+            self.worker_thread.stop()
             logger.info("已关闭处理线程")
         event.accept()

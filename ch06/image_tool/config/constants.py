@@ -1,12 +1,8 @@
-# 去广告工具支持的文件扩展名
-AD_REMOVE_EXTENSIONS = [
-    ".zip", ".rar", ".pdf", ".txt", ".doc",
-    ".docx", ".ppt", ".xls", ".jpg", ".png",
-    ".mp4", ".mp3", ".avi", ".mov", ".mkv"
+# 支持的图片格式
+SUPPORTED_IMAGE_EXTENSIONS = [
+    ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".webp"
 ]
 
-# 默认广告词匹配规则
-DEFAULT_AD_PATTERNS = [
-    r'【itjc8\.com】',
-    r'【免费课程瑞客论坛 www\.ruike1\.com】',
-]
+# 默认图片尺寸
+DEFAULT_IMAGE_WIDTH = 800
+DEFAULT_IMAGE_HEIGHT = 600

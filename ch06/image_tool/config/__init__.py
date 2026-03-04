@@ -1,13 +1,15 @@
 from .constants import (
-    AD_REMOVE_EXTENSIONS,
-    DEFAULT_AD_PATTERNS,
+    SUPPORTED_IMAGE_EXTENSIONS,
+    DEFAULT_IMAGE_WIDTH,
+    DEFAULT_IMAGE_HEIGHT,
 )
 from .common import get_app_dir
 from .loguru import logger
 
 __all__ = [
-    "AD_REMOVE_EXTENSIONS",
-    "DEFAULT_AD_PATTERNS",
+    "SUPPORTED_IMAGE_EXTENSIONS",
+    "DEFAULT_IMAGE_WIDTH",
+    "DEFAULT_IMAGE_HEIGHT",
     "get_app_dir",
     "logger",
 ]

@@ -6,7 +6,6 @@ from PyQt6.QtWidgets import QApplication
 logger.info("程序启动")
 
 app = QApplication(sys.argv)
-app.setStyle("Fusion")
 window = MainWindow()
 window.show()
 
