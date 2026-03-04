@@ -224,7 +224,9 @@ class MainWindow(QMainWindow):
             return
 
         # 选择保存路径
-        default_name = f"{Path(self.current_image_path).stem}_resized{Path(self.current_image_path).suffix}"
+        width = self.width_spin.value()
+        height = self.height_spin.value()
+        default_name = f"{Path(self.current_image_path).stem}_{width}_{height}{Path(self.current_image_path).suffix}"
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "保存图片",

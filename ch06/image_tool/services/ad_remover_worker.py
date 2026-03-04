@@ -55,6 +55,16 @@ class ImageResizeWorker(QThread):
                 # 调整尺寸
                 resized_img = img.resize((self.width, self.height), Image.Resampling.LANCZOS)
 
+                # 如果图片是 RGBA 模式且保存为 JPEG，需要转换为 RGB
+                if resized_img.mode == 'RGBA':
+                    # 创建白色背景
+                    background = Image.new('RGB', resized_img.size, (255, 255, 255))
+                    background.paste(resized_img, mask=resized_img.split()[3])  # 使用 alpha 通道作为 mask
+                    resized_img = background
+                elif resized_img.mode != 'RGB' and resized_img.mode != 'L':
+                    # 其他非 RGB 模式也转换为 RGB
+                    resized_img = resized_img.convert('RGB')
+
                 if self.preview_only:
                     # 预览模式：保存到临时文件
                     preview_path = image_path.parent / f"preview_{image_path.name}"
