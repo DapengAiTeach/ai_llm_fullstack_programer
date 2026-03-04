@@ -2,7 +2,8 @@
 AD_REMOVE_EXTENSIONS = [
     ".zip", ".rar", ".pdf", ".txt", ".doc",
     ".docx", ".ppt", ".xls", ".jpg", ".png",
-    ".mp4", ".mp3", ".avi", ".mov", ".mkv"
+    ".mp4", ".mp3", ".avi", ".mov", ".mkv",
+    ".flv", ".wmv", ".ts", ".m4v"
 ]
 
 # 默认广告词匹配规则
