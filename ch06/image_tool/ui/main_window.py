@@ -107,7 +107,7 @@ class MainWindow(QMainWindow):
         self.width_spin.setRange(1, 10000)
         self.width_spin.setValue(DEFAULT_IMAGE_WIDTH)
         self.width_spin.setSuffix(" px")
-        self.width_spin.setFixedWidth(100)
+        self.width_spin.setFixedWidth(120)
         width_layout.addWidget(self.width_spin)
         size_layout.addLayout(width_layout)
 
@@ -118,7 +118,7 @@ class MainWindow(QMainWindow):
         self.height_spin.setRange(1, 10000)
         self.height_spin.setValue(DEFAULT_IMAGE_HEIGHT)
         self.height_spin.setSuffix(" px")
-        self.height_spin.setFixedWidth(100)
+        self.height_spin.setFixedWidth(120)
         height_layout.addWidget(self.height_spin)
         size_layout.addLayout(height_layout)
 
