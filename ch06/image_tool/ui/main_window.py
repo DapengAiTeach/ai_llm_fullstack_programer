@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -28,34 +27,39 @@ class MainWindow(QMainWindow):
 
     def init_ui(self):
         """初始化用户界面"""
+        #######################中央布局区域开始#######################
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
+
         main_layout = QVBoxLayout(central_widget)
         main_layout.setSpacing(10)
         main_layout.setContentsMargins(15, 15, 15, 15)
+        #######################中央布局区域结束#######################
 
-        # ===== 上方：图片预览区域 =====
+        #######################图片预览区域开始#######################
         preview_group = QGroupBox("图片预览")
+        main_layout.addWidget(preview_group, stretch=3)
         preview_layout = QVBoxLayout(preview_group)
         preview_layout.setContentsMargins(10, 15, 10, 10)
 
         # 图片预览容器（带尺寸信息叠加）
         self.image_container = QWidget()
         self.image_container.setStyleSheet("background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;")
+        preview_layout.addWidget(self.image_container)
         image_container_layout = QVBoxLayout(self.image_container)
         image_container_layout.setContentsMargins(0, 0, 0, 0)
-        
+
+        # 图片标签，未显示图片时显示标签
         self.image_label = QLabel()
         self.image_label.setMinimumHeight(350)
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_label.setText("未选择图片")
         self.image_label.setStyleSheet("border: none; background: transparent;")
         image_container_layout.addWidget(self.image_label)
-        
-        preview_layout.addWidget(self.image_container)
-        main_layout.addWidget(preview_group, stretch=3)
+        #######################图片预览区域结束#######################
 
-        # ===== 下方：控制面板区域 =====
+
+        #######################控制面板区域开始#######################
         control_widget = QWidget()
         control_layout = QVBoxLayout(control_widget)
         control_layout.setSpacing(10)
@@ -66,25 +70,28 @@ class MainWindow(QMainWindow):
         settings_layout = QHBoxLayout()
         control_layout.addLayout(settings_layout)
 
-        # ===== 图片选择区域 =====
+        # 图片选择区域
         file_group = QGroupBox("图片选择")
+        settings_layout.addWidget(file_group, stretch=2)
         file_layout = QHBoxLayout(file_group)
         file_layout.setSpacing(8)
 
+        # 图片输入框
         self.file_input = QLineEdit()
         self.file_input.setPlaceholderText("请选择要处理的图片...")
         self.file_input.setReadOnly(True)
         file_layout.addWidget(self.file_input)
 
-        self.browse_btn = QPushButton("浏览...")
+        # 图片选择按钮
+        self.browse_btn = QPushButton("浏览")
         self.browse_btn.setFixedWidth(80)
         self.browse_btn.clicked.connect(self.browse_image)
         file_layout.addWidget(self.browse_btn)
 
-        settings_layout.addWidget(file_group, stretch=2)
 
-        # ===== 尺寸设置区域 =====
+        # 尺寸设置区域
         size_group = QGroupBox("尺寸设置")
+        settings_layout.addWidget(size_group, stretch=3)
         size_layout = QHBoxLayout(size_group)
         size_layout.setSpacing(15)
 
@@ -121,10 +128,10 @@ class MainWindow(QMainWindow):
         self.height_spin.setFixedWidth(120)
         height_layout.addWidget(self.height_spin)
         size_layout.addLayout(height_layout)
+        #######################控制面板区域结束#######################
 
-        settings_layout.addWidget(size_group, stretch=3)
-
-        # ===== 操作按钮区域 =====
+        #######################操作按钮区域开始#######################
+        # 操作按钮
         button_layout = QHBoxLayout()
         button_layout.setSpacing(15)
         control_layout.addLayout(button_layout)
@@ -137,17 +144,21 @@ class MainWindow(QMainWindow):
 
         button_layout.addStretch()
 
+        # 预览按钮
         self.preview_btn = QPushButton("预览")
         self.preview_btn.setFixedWidth(100)
         self.preview_btn.clicked.connect(self.preview_image)
         self.preview_btn.setEnabled(False)
         button_layout.addWidget(self.preview_btn)
 
-        self.save_btn = QPushButton("保存图片")
+        # 保存按钮
+        self.save_btn = QPushButton("保存")
         self.save_btn.setFixedWidth(100)
         self.save_btn.clicked.connect(self.save_image)
         self.save_btn.setEnabled(False)
         button_layout.addWidget(self.save_btn)
+        #######################操作按钮区域结束#######################
+
 
     def browse_image(self):
         """浏览并选择图片"""
