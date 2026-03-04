@@ -1,1 +1,5 @@
-from .ad_remover_worker import ImageResizeWorker
+from .image_resize_worker import ImageResizeWorker
+
+__all__ = [
+    "ImageResizeWorker",
+]

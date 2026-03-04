@@ -1,7 +1,7 @@
 from pathlib import Path
 from PIL import Image
-from config import logger, SUPPORTED_IMAGE_EXTENSIONS
 from PyQt6.QtCore import QThread, pyqtSignal
+from config import logger, SUPPORTED_IMAGE_EXTENSIONS
 
 
 class ImageResizeWorker(QThread):
@@ -11,6 +11,8 @@ class ImageResizeWorker(QThread):
     # 预览信号，发送处理后的图片路径
     preview_signal = pyqtSignal(str)
     # 完成信号
+    # 参数1：是否成功
+    # 参数2：图片路径
     finished_signal = pyqtSignal(bool, str)
 
     def __init__(self, image_path, width, height, output_path=None, preview_only=True):
@@ -79,7 +81,7 @@ class ImageResizeWorker(QThread):
                     else:
                         # 默认在原文件名后添加 _resized
                         output_path = image_path.parent / f"{image_path.stem}_resized{image_path.suffix}"
-                    
+
                     resized_img.save(output_path)
                     self.log_signal.emit(f"图片已保存: {output_path.name}")
                     self.finished_signal.emit(True, str(output_path))

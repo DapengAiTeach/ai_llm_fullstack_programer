@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPixmap
 from services import ImageResizeWorker
-from config import logger, SUPPORTED_IMAGE_EXTENSIONS, DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT, SIZE_PRESETS
+from config import logger, SUPPORTED_IMAGE_EXTENSIONS, SIZE_PRESETS
 
 
 class MainWindow(QMainWindow):
@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
         width_layout.addWidget(QLabel("宽度:"))
         self.width_spin = QSpinBox()
         self.width_spin.setRange(1, 10000)
-        self.width_spin.setValue(DEFAULT_IMAGE_WIDTH)
+        self.width_spin.setValue(SIZE_PRESETS["横屏"][0])
         self.width_spin.setSuffix(" px")
         self.width_spin.setFixedWidth(120)
         width_layout.addWidget(self.width_spin)
@@ -116,7 +116,7 @@ class MainWindow(QMainWindow):
         height_layout.addWidget(QLabel("高度:"))
         self.height_spin = QSpinBox()
         self.height_spin.setRange(1, 10000)
-        self.height_spin.setValue(DEFAULT_IMAGE_HEIGHT)
+        self.height_spin.setValue(SIZE_PRESETS["横屏"][1])
         self.height_spin.setSuffix(" px")
         self.height_spin.setFixedWidth(120)
         height_layout.addWidget(self.height_spin)
