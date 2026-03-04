@@ -18,10 +18,11 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("图像尺寸修改工具")
-        self.setMinimumSize(900, 600)
+        self.setMinimumSize(800, 600)
         self.worker_thread = None
         self.current_image_path = None
         self.preview_image_path = None
+        self.is_showing_preview = False
         self.init_ui()
 
     def init_ui(self):
@@ -47,7 +48,7 @@ class MainWindow(QMainWindow):
         right_layout = QVBoxLayout(right_panel)
         splitter.addWidget(right_panel)
 
-        splitter.setSizes([350, 550])
+        splitter.setSizes([300, 500])
 
         # ===== 左侧：图片选择区域 =====
         file_group = QGroupBox("图片选择")
@@ -117,31 +118,22 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(log_group)
         left_layout.addStretch()
 
-        # ===== 右侧：图片预览区域 =====
+        # ===== 右侧：图片预览区域（单张图片）=====
         preview_group = QGroupBox("图片预览")
         preview_layout = QVBoxLayout(preview_group)
 
-        # 原始图片标签
-        original_label = QLabel("原始图片:")
-        preview_layout.addWidget(original_label)
+        # 图片预览标签
+        self.image_label = QLabel()
+        self.image_label.setMinimumHeight(400)
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_label.setStyleSheet("background-color: #f0f0f0; border: 1px solid #ccc;")
+        self.image_label.setText("未选择图片")
+        preview_layout.addWidget(self.image_label)
 
-        self.original_image_label = QLabel()
-        self.original_image_label.setMinimumHeight(200)
-        self.original_image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.original_image_label.setStyleSheet("background-color: #f0f0f0; border: 1px solid #ccc;")
-        self.original_image_label.setText("未选择图片")
-        preview_layout.addWidget(self.original_image_label)
-
-        # 处理后的图片标签
-        resized_label = QLabel("调整后预览:")
-        preview_layout.addWidget(resized_label)
-
-        self.resized_image_label = QLabel()
-        self.resized_image_label.setMinimumHeight(200)
-        self.resized_image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.resized_image_label.setStyleSheet("background-color: #f0f0f0; border: 1px solid #ccc;")
-        self.resized_image_label.setText("点击预览按钮查看效果")
-        preview_layout.addWidget(self.resized_image_label)
+        # 图片尺寸信息
+        self.image_info_label = QLabel("")
+        self.image_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        preview_layout.addWidget(self.image_info_label)
 
         right_layout.addWidget(preview_group)
 
@@ -158,29 +150,42 @@ class MainWindow(QMainWindow):
         
         if file_path:
             self.current_image_path = file_path
+            self.preview_image_path = None
+            self.is_showing_preview = False
             self.file_input.setText(file_path)
             self.preview_btn.setEnabled(True)
             self.save_btn.setEnabled(True)
-            self.log_label.setText(f"已选择图片: {Path(file_path).name}")
             logger.info(f"选择的图片: {file_path}")
             
             # 显示原始图片
-            self.display_original_image(file_path)
+            self.display_image(file_path, is_preview=False)
 
-    def display_original_image(self, image_path):
-        """显示原始图片"""
+    def display_image(self, image_path, is_preview=False):
+        """显示图片"""
         pixmap = QPixmap(image_path)
-        if not pixmap.isNull():
-            # 缩放以适应标签大小，保持比例
-            scaled_pixmap = pixmap.scaled(
-                self.original_image_label.size(),
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation
-            )
-            self.original_image_label.setPixmap(scaled_pixmap)
-            
-            # 显示尺寸信息
-            self.log_label.setText(f"原始尺寸: {pixmap.width()} x {pixmap.height()}")
+        if pixmap.isNull():
+            return
+
+        # 缩放以适应标签大小，保持比例
+        label_size = self.image_label.size()
+        scaled_pixmap = pixmap.scaled(
+            label_size.width() - 20,
+            label_size.height() - 20,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
+        self.image_label.setPixmap(scaled_pixmap)
+
+        # 更新尺寸信息
+        if is_preview:
+            self.image_info_label.setText(f"调整后尺寸: {pixmap.width()} x {pixmap.height()}")
+        else:
+            self.image_info_label.setText(f"原始尺寸: {pixmap.width()} x {pixmap.height()}")
+            # 自动设置目标尺寸为原始尺寸
+            self.width_spin.setValue(pixmap.width())
+            self.height_spin.setValue(pixmap.height())
+
+        self.log_label.setText(f"图片: {Path(image_path).name}")
 
     def preview_image(self):
         """预览调整后的图片"""
@@ -203,21 +208,14 @@ class MainWindow(QMainWindow):
             preview_only=True
         )
         self.worker_thread.log_signal.connect(self.update_log)
-        self.worker_thread.preview_signal.connect(self.display_preview_image)
+        self.worker_thread.preview_signal.connect(self.on_preview_ready)
         self.worker_thread.finished_signal.connect(self.handle_preview_finished)
         self.worker_thread.start()
 
-    def display_preview_image(self, image_path):
-        """显示预览图片"""
+    def on_preview_ready(self, image_path):
+        """预览图片生成完成"""
         self.preview_image_path = image_path
-        pixmap = QPixmap(image_path)
-        if not pixmap.isNull():
-            scaled_pixmap = pixmap.scaled(
-                self.resized_image_label.size(),
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation
-            )
-            self.resized_image_label.setPixmap(scaled_pixmap)
+        self.display_image(image_path, is_preview=True)
 
     def save_image(self):
         """保存调整后的图片"""
@@ -226,10 +224,11 @@ class MainWindow(QMainWindow):
             return
 
         # 选择保存路径
+        default_name = f"{Path(self.current_image_path).stem}_resized{Path(self.current_image_path).suffix}"
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "保存图片",
-            str(Path(self.current_image_path).parent / f"{Path(self.current_image_path).stem}_resized{Path(self.current_image_path).suffix}"),
+            str(Path(self.current_image_path).parent / default_name),
             "图片文件 (" + " ".join([f"*{ext}" for ext in SUPPORTED_IMAGE_EXTENSIONS]) + ")"
         )
 
@@ -285,10 +284,10 @@ class MainWindow(QMainWindow):
     def resizeEvent(self, event):
         """窗口大小改变时重新缩放图片"""
         super().resizeEvent(event)
-        if self.current_image_path:
-            self.display_original_image(self.current_image_path)
-        if self.preview_image_path:
-            self.display_preview_image(self.preview_image_path)
+        if self.is_showing_preview and self.preview_image_path:
+            self.display_image(self.preview_image_path, is_preview=True)
+        elif self.current_image_path:
+            self.display_image(self.current_image_path, is_preview=False)
 
     def closeEvent(self, event):
         """优雅关闭窗口"""
