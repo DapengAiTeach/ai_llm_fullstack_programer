@@ -26,31 +26,34 @@ class ImageResizeWorker(QThread):
 
     def run(self):
         """执行图片尺寸调整"""
+        # 检查是否继续执行
+        if not self._is_running:
+            return
+
+        # 检查图片文件是否存在
+        image_path = Path(self.image_path)
+        if not image_path.exists():
+            self.log_signal.emit(f"错误: 图片文件不存在 {self.image_path}")
+            self.finished_signal.emit(False, "图片文件不存在")
+            return
+
+        # 检查文件扩展名
+        if image_path.suffix.lower() not in SUPPORTED_IMAGE_EXTENSIONS:
+            self.log_signal.emit(f"错误: 不支持的图片格式 {image_path.suffix}")
+            self.finished_signal.emit(False, "不支持的图片格式")
+            return
+
+        self.log_signal.emit(f"正在处理图片: {image_path.name}")
+        self.log_signal.emit(f"目标尺寸: {self.width} x {self.height}")
+
         try:
-            if not self._is_running:
-                return
-
-            # 检查图片文件是否存在
-            image_path = Path(self.image_path)
-            if not image_path.exists():
-                self.log_signal.emit(f"错误: 图片文件不存在 {self.image_path}")
-                self.finished_signal.emit(False, "图片文件不存在")
-                return
-
-            # 检查文件扩展名
-            if image_path.suffix.lower() not in SUPPORTED_IMAGE_EXTENSIONS:
-                self.log_signal.emit(f"错误: 不支持的图片格式 {image_path.suffix}")
-                self.finished_signal.emit(False, "不支持的图片格式")
-                return
-
-            self.log_signal.emit(f"正在处理图片: {image_path.name}")
-            self.log_signal.emit(f"目标尺寸: {self.width} x {self.height}")
-
             # 打开图片
             with Image.open(self.image_path) as img:
+                # 获取原始图片尺寸
                 original_size = img.size
                 self.log_signal.emit(f"原始尺寸: {original_size[0]} x {original_size[1]}")
 
+                # 检查是否继续执行
                 if not self._is_running:
                     return
 
