@@ -31,29 +31,45 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setSpacing(15)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(15, 15, 15, 15)
 
-        # 使用分割器
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        main_layout.addWidget(splitter)
+        # ===== 上方：图片预览区域 =====
+        preview_group = QGroupBox("图片预览")
+        preview_layout = QVBoxLayout(preview_group)
+        preview_layout.setContentsMargins(10, 15, 10, 10)
 
-        # 左侧控制面板
-        left_panel = QWidget()
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.setSpacing(15)
-        splitter.addWidget(left_panel)
+        # 图片预览容器（带尺寸信息叠加）
+        self.image_container = QWidget()
+        self.image_container.setStyleSheet("background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;")
+        image_container_layout = QVBoxLayout(self.image_container)
+        image_container_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.image_label = QLabel()
+        self.image_label.setMinimumHeight(350)
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_label.setText("未选择图片")
+        self.image_label.setStyleSheet("border: none; background: transparent;")
+        image_container_layout.addWidget(self.image_label)
+        
+        preview_layout.addWidget(self.image_container)
+        main_layout.addWidget(preview_group, stretch=3)
 
-        # 右侧预览面板
-        right_panel = QWidget()
-        right_layout = QVBoxLayout(right_panel)
-        splitter.addWidget(right_panel)
+        # ===== 下方：控制面板区域 =====
+        control_widget = QWidget()
+        control_layout = QVBoxLayout(control_widget)
+        control_layout.setSpacing(10)
+        control_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(control_widget, stretch=1)
 
-        splitter.setSizes([300, 500])
+        # 使用水平布局放置设置项
+        settings_layout = QHBoxLayout()
+        control_layout.addLayout(settings_layout)
 
-        # ===== 左侧：图片选择区域 =====
+        # ===== 图片选择区域 =====
         file_group = QGroupBox("图片选择")
         file_layout = QHBoxLayout(file_group)
+        file_layout.setSpacing(8)
 
         self.file_input = QLineEdit()
         self.file_input.setPlaceholderText("请选择要处理的图片...")
@@ -61,14 +77,16 @@ class MainWindow(QMainWindow):
         file_layout.addWidget(self.file_input)
 
         self.browse_btn = QPushButton("浏览...")
+        self.browse_btn.setFixedWidth(80)
         self.browse_btn.clicked.connect(self.browse_image)
         file_layout.addWidget(self.browse_btn)
 
-        left_layout.addWidget(file_group)
+        settings_layout.addWidget(file_group, stretch=2)
 
-        # ===== 左侧：尺寸设置区域 =====
+        # ===== 尺寸设置区域 =====
         size_group = QGroupBox("尺寸设置")
-        size_layout = QVBoxLayout(size_group)
+        size_layout = QHBoxLayout(size_group)
+        size_layout.setSpacing(15)
 
         # 预设选择
         preset_layout = QHBoxLayout()
@@ -78,8 +96,8 @@ class MainWindow(QMainWindow):
         for preset_name in SIZE_PRESETS.keys():
             self.preset_combo.addItem(preset_name)
         self.preset_combo.currentTextChanged.connect(self.on_preset_changed)
+        self.preset_combo.setFixedWidth(100)
         preset_layout.addWidget(self.preset_combo)
-        preset_layout.addStretch()
         size_layout.addLayout(preset_layout)
 
         # 宽度设置
@@ -89,8 +107,8 @@ class MainWindow(QMainWindow):
         self.width_spin.setRange(1, 10000)
         self.width_spin.setValue(DEFAULT_IMAGE_WIDTH)
         self.width_spin.setSuffix(" px")
+        self.width_spin.setFixedWidth(100)
         width_layout.addWidget(self.width_spin)
-        width_layout.addStretch()
         size_layout.addLayout(width_layout)
 
         # 高度设置
@@ -100,55 +118,36 @@ class MainWindow(QMainWindow):
         self.height_spin.setRange(1, 10000)
         self.height_spin.setValue(DEFAULT_IMAGE_HEIGHT)
         self.height_spin.setSuffix(" px")
+        self.height_spin.setFixedWidth(100)
         height_layout.addWidget(self.height_spin)
-        height_layout.addStretch()
         size_layout.addLayout(height_layout)
 
-        left_layout.addWidget(size_group)
+        settings_layout.addWidget(size_group, stretch=3)
 
-        # ===== 左侧：操作按钮区域 =====
+        # ===== 操作按钮区域 =====
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(15)
+        control_layout.addLayout(button_layout)
+
+        # 尺寸信息显示（底部居中）
+        self.image_info_label = QLabel("")
+        self.image_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_info_label.setStyleSheet("color: #666; font-size: 13px;")
+        button_layout.addWidget(self.image_info_label)
+
+        button_layout.addStretch()
 
         self.preview_btn = QPushButton("预览")
+        self.preview_btn.setFixedWidth(100)
         self.preview_btn.clicked.connect(self.preview_image)
         self.preview_btn.setEnabled(False)
         button_layout.addWidget(self.preview_btn)
 
         self.save_btn = QPushButton("保存图片")
+        self.save_btn.setFixedWidth(100)
         self.save_btn.clicked.connect(self.save_image)
         self.save_btn.setEnabled(False)
         button_layout.addWidget(self.save_btn)
-
-        left_layout.addLayout(button_layout)
-
-        # ===== 左侧：日志区域 =====
-        log_group = QGroupBox("处理日志")
-        log_layout = QVBoxLayout(log_group)
-
-        self.log_label = QLabel("就绪")
-        log_layout.addWidget(self.log_label)
-
-        left_layout.addWidget(log_group)
-        left_layout.addStretch()
-
-        # ===== 右侧：图片预览区域（单张图片）=====
-        preview_group = QGroupBox("图片预览")
-        preview_layout = QVBoxLayout(preview_group)
-
-        # 图片预览标签
-        self.image_label = QLabel()
-        self.image_label.setMinimumHeight(400)
-        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_label.setStyleSheet("background-color: #f0f0f0; border: 1px solid #ccc;")
-        self.image_label.setText("未选择图片")
-        preview_layout.addWidget(self.image_label)
-
-        # 图片尺寸信息
-        self.image_info_label = QLabel("")
-        self.image_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        preview_layout.addWidget(self.image_info_label)
-
-        right_layout.addWidget(preview_group)
 
     def browse_image(self):
         """浏览并选择图片"""
@@ -198,8 +197,6 @@ class MainWindow(QMainWindow):
             self.width_spin.setValue(pixmap.width())
             self.height_spin.setValue(pixmap.height())
 
-        self.log_label.setText(f"图片: {Path(image_path).name}")
-
     def on_preset_changed(self, preset_name):
         """尺寸预设选择改变"""
         if preset_name in SIZE_PRESETS:
@@ -218,7 +215,6 @@ class MainWindow(QMainWindow):
 
         self.preview_btn.setEnabled(False)
         self.save_btn.setEnabled(False)
-        self.log_label.setText("正在处理...")
 
         # 创建工作线程
         self.worker_thread = ImageResizeWorker(
@@ -227,7 +223,6 @@ class MainWindow(QMainWindow):
             height,
             preview_only=True
         )
-        self.worker_thread.log_signal.connect(self.update_log)
         self.worker_thread.preview_signal.connect(self.on_preview_ready)
         self.worker_thread.finished_signal.connect(self.handle_preview_finished)
         self.worker_thread.start()
@@ -262,7 +257,6 @@ class MainWindow(QMainWindow):
 
         self.preview_btn.setEnabled(False)
         self.save_btn.setEnabled(False)
-        self.log_label.setText("正在保存...")
 
         # 创建工作线程
         self.worker_thread = ImageResizeWorker(
@@ -272,23 +266,15 @@ class MainWindow(QMainWindow):
             output_path=file_path,
             preview_only=False
         )
-        self.worker_thread.log_signal.connect(self.update_log)
         self.worker_thread.finished_signal.connect(self.handle_save_finished)
         self.worker_thread.start()
-
-    def update_log(self, message):
-        """更新日志"""
-        self.log_label.setText(message)
 
     def handle_preview_finished(self, success, message):
         """预览完成处理"""
         self.preview_btn.setEnabled(True)
         self.save_btn.setEnabled(True)
         
-        if success:
-            self.log_label.setText("预览生成完成")
-        else:
-            self.log_label.setText(f"处理失败: {message}")
+        if not success:
             QMessageBox.critical(self, "错误", f"处理失败: {message}")
 
     def handle_save_finished(self, success, message):
@@ -297,10 +283,8 @@ class MainWindow(QMainWindow):
         self.save_btn.setEnabled(True)
         
         if success:
-            self.log_label.setText(f"图片已保存: {message}")
             QMessageBox.information(self, "完成", f"图片已成功保存到:\n{message}")
         else:
-            self.log_label.setText(f"保存失败: {message}")
             QMessageBox.critical(self, "错误", f"保存失败: {message}")
 
     def resizeEvent(self, event):
