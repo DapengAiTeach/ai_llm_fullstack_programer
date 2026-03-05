@@ -26,6 +26,7 @@ def index(request):
 
     # 传递个网页的消息
     context = {
-        "answer": answer
+        "answer": answer,
+        "user_message": message
     }
     return render(request, 'chatbot/index.html', context)
