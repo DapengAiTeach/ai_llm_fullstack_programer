@@ -28,15 +28,15 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}" 
+                    <a class="nav-link {% if request.resolver_match.namespace == 'index' %}active{% endif %}"
                        href="{% url 'index:index' %}">首页</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'index' and request.resolver_match.namespace == 'chatbot' %}active{% endif %}" 
+                    <a class="nav-link {% if request.resolver_match.namespace == 'chatbot' %}active{% endif %}"
                        href="{% url 'chatbot:index' %}">AI聊天</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'index' and request.resolver_match.namespace == 'image_tool' %}active{% endif %}" 
+                    <a class="nav-link {% if request.resolver_match.namespace == 'image_tool' %}active{% endif %}"
                        href="{% url 'image_tool:index' %}">图片工具</a>
                 </li>
             </ul>
