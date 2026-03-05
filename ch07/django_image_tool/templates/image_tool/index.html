@@ -1,16 +1,134 @@
 {% extends 'layout/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link href="{% static 'css/image_tool.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-    <h1>图片工具网-图片工具首页</h1>
-    <!-- 显示预览 -->
-    <h3>预览：</h3>
-    {% if image_data %}
-        <img src="{{ image_data }}" style="max-width: 500px; max-height: 500px;">
-    {% endif %}
-    <h3>请选择一张图片：</h3>
-    <!-- 上传表单 -->
-    <form action="{% url 'image_tool:index' %}" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="file" name="image" accept="image/*" required>
-        <button type="submit">上传并预览</button>
-    </form>
+<div class="container py-4">
+    <div class="workspace-container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1 class="page-title">📤 图片上传工具</h1>
+            <button class="btn btn-outline-primary btn-sm" type="button">
+                🕐 历史记录
+            </button>
+        </div>
+
+        <!-- 主工作区 -->
+        <div class="workspace">
+            <!-- 左侧工具栏 -->
+            <div class="toolbar">
+                <label for="image-input" class="tool-btn active" title="上传图片">
+                    <span class="icon">📤</span>
+                    <span>上传</span>
+                </label>
+                <button class="tool-btn" title="图片预览" {% if not image_data %}disabled{% endif %}>
+                    <span class="icon">🖼️</span>
+                    <span>预览</span>
+                </button>
+                <button class="tool-btn" title="裁剪图片" disabled>
+                    <span class="icon">✂️</span>
+                    <span>裁剪</span>
+                </button>
+                <button class="tool-btn" title="旋转图片" disabled>
+                    <span class="icon">🔄</span>
+                    <span>旋转</span>
+                </button>
+                {% if image_data %}
+                <a href="{{ image_data }}" download class="tool-btn text-decoration-none" title="下载图片">
+                    <span class="icon">💾</span>
+                    <span>下载</span>
+                </a>
+                <button class="tool-btn" title="删除图片" onclick="location.reload()">
+                    <span class="icon">🗑️</span>
+                    <span>删除</span>
+                </button>
+                {% else %}
+                <button class="tool-btn" title="下载图片" disabled>
+                    <span class="icon">💾</span>
+                    <span>下载</span>
+                </button>
+                <button class="tool-btn" title="删除图片" disabled>
+                    <span class="icon">🗑️</span>
+                    <span>删除</span>
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- 中央画布区域 -->
+            <div class="canvas-area">
+                {% if not image_data %}
+                <!-- 上传占位区 -->
+                <form action="{% url 'image_tool:index' %}" method="post" enctype="multipart/form-data" class="m-0">
+                    {% csrf_token %}
+                    <label for="image-input" class="upload-placeholder w-100">
+                        <div class="upload-icon">📁</div>
+                        <h3>拖拽图片到这里</h3>
+                        <p>或者点击选择文件上传</p>
+                        <button type="button" class="upload-btn">选择文件</button>
+                        <input type="file" id="image-input" name="image" accept="image/*" required class="hidden-form">
+                    </label>
+                </form>
+                {% else %}
+                <!-- 图片预览区 -->
+                <div class="preview-area">
+                    <img src="{{ image_data }}" alt="上传的图片预览">
+                </div>
+                {% endif %}
+
+                <!-- 底部信息栏 -->
+                <div class="info-bar">
+                    <div class="info-item">
+                        <span>📄 名称：</span>
+                        <strong>{% if image_data %}已上传图片{% else %}-{% endif %}</strong>
+                    </div>
+                    <div class="info-item">
+                        <span>📐 尺寸：</span>
+                        <strong>{% if image_data %}自适应{% else %}-{% endif %}</strong>
+                    </div>
+                    <div class="info-item">
+                        <span>💾 大小：</span>
+                        <strong>{% if image_data %}计算中...{% else %}-{% endif %}</strong>
+                    </div>
+                    <div class="info-item">
+                        <span>🎨 格式：</span>
+                        <strong>{% if image_data %}JPG/PNG{% else %}-{% endif %}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 支持格式提示 -->
+        <div class="format-hint mt-3">
+            支持格式：<span>JPG</span><span>PNG</span><span>GIF</span><span>WebP</span>
+            单文件最大：<span>10MB</span>
+        </div>
+
+        <!-- 最近上传历史 -->
+        {% if image_data %}
+        <div class="history-section">
+            <div class="history-title">
+                <span>🕐</span>
+                <span>最近上传</span>
+            </div>
+            <div class="history-list">
+                <div class="history-item active">
+                    <img src="{{ image_data }}" alt="当前图片">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // 自动提交表单当选择文件后
+    document.getElementById('image-input').addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            this.closest('form').submit();
+        }
+    });
+</script>
 {% endblock %}
