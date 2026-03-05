@@ -17,5 +17,17 @@
 </header>
 {#顶部导航结束#}
 <h1>图片工具网-图片工具首页</h1>
+<!-- 显示预览 -->
+<h3>预览：</h3>
+{% if image_data %}
+    <img src="{{ image_data }}" style="max-width: 500px; max-height: 500px;">
+{% endif %}
+<h3>请选择一张图片：</h3>
+<!-- 上传表单 -->
+<form action="{% url 'image_tool:index' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="image" accept="image/*" required>
+    <button type="submit">上传并预览</button>
+</form>
 </body>
 </html>
