@@ -1,0 +1,84 @@
+/* ========================================
+   图片工具网 - 首页样式（工具矩阵型）
+   ======================================== */
+
+/* 使用 base.css 中的 CSS 变量 */
+
+/* ========================================
+   首页工具矩阵样式
+   ======================================== */
+
+.tool-card {
+    background: var(--white, #ffffff);
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+
+.tool-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(30, 64, 175, 0.15);
+    border-color: var(--tech-blue-accent, #60a5fa);
+}
+
+.tool-card.coming-soon {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.tool-card.coming-soon:hover {
+    transform: none;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.tool-card.more-tools {
+    background: linear-gradient(135deg, var(--gray-100, #f3f4f6) 0%, var(--gray-200, #e5e7eb) 100%);
+    border: 2px dashed var(--gray-200, #e5e7eb);
+}
+
+.tool-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.tool-title {
+    color: var(--tech-blue-dark, #1e3a8a);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.tool-desc {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.tool-btn {
+    display: inline-block;
+    color: var(--tech-blue-primary, #1e40af);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.tool-card:hover .tool-btn {
+    color: var(--tech-blue-light, #3b82f6);
+    transform: translateX(5px);
+}
+
+/* 页面标题样式 */
+.page-title {
+    color: var(--tech-blue-dark, #1e3a8a);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 3px solid var(--tech-blue-accent, #60a5fa);
+    display: inline-block;
+}
