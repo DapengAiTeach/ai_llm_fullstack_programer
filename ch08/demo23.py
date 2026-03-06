@@ -1,0 +1,10 @@
+s1 = {1, 2}
+s2 = {2, 3}
+
+# 方法1：通过 - 运算符
+s3 = s1 - s2
+print(s3, type(s3))
+
+# 方法2：通过 difference() 方法
+s3 = s1.difference(s2)
+print(s3, type(s3))
