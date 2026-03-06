@@ -467,3 +467,83 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ========================================
+   SSE 流式聊天增强样式
+   ======================================== */
+
+/* 输入框禁用状态 */
+.input-field:disabled {
+    background-color: var(--gray-100, #f3f4f6);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* 打字机效果指示器 */
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.typing-indicator span {
+    animation: typing-blink 1.4s infinite both;
+    font-weight: bold;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing-blink {
+    0%, 60%, 100% {
+        opacity: 0.3;
+    }
+    30% {
+        opacity: 1;
+    }
+}
+
+/* 错误信息样式 */
+.text-danger {
+    color: #dc2626;
+    font-size: 0.9rem;
+}
+
+/* AI 消息内容区域（支持流式显示） */
+.message.ai .message-content {
+    min-height: 1.5em;
+}
+
+/* 流式输出时的光标效果（可选） */
+.message.ai.streaming .message-content::after {
+    content: '|';
+    animation: cursor-blink 1s infinite;
+    color: var(--tech-blue-primary, #1e40af);
+    margin-left: 2px;
+}
+
+@keyframes cursor-blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
+}

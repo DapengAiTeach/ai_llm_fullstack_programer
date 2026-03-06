@@ -64,8 +64,7 @@
 
             <!-- 消息列表区域 -->
             <div class="messages-area" id="messages-area">
-                {% if not answer %}
-                <!-- 欢迎消息 -->
+                <!-- 欢迎消息（首次加载时显示，发送消息后会自动移除） -->
                 <div class="welcome-message">
                     <div class="avatar-large">🤖</div>
                     <h2>你好！我是 AI 智能助手</h2>
@@ -95,30 +94,11 @@
                         </div>
                     </div>
                 </div>
-                {% else %}
-                <!-- 用户消息 -->
-                <div class="message user">
-                    <div class="message-avatar">👤</div>
-                    <div>
-                        <div class="message-content">{{ user_message|default:"用户问题" }}</div>
-                        <div class="message-time">刚刚</div>
-                    </div>
-                </div>
-
-                <!-- AI 回复 -->
-                <div class="message ai">
-                    <div class="message-avatar">🤖</div>
-                    <div>
-                        <div class="message-content">{{ answer }}</div>
-                        <div class="message-time">刚刚</div>
-                    </div>
-                </div>
-                {% endif %}
             </div>
 
             <!-- 输入区域 -->
             <div class="input-area">
-                <form action="{% url 'chatbot:index' %}" method="post" id="chat-form">
+                <form id="chat-form">
                     {% csrf_token %}
                     <div class="input-wrapper">
                         <textarea
@@ -127,8 +107,7 @@
                             name="message"
                             placeholder="输入你的问题..."
                             rows="1"
-                            onkeydown="handleKeyDown(event)"
-                            required>{{ user_message }}</textarea>
+                            required></textarea>
                         <div class="input-actions">
                             <button type="button" class="action-btn" title="语音输入">🎤</button>
                             <button type="submit" class="send-btn" title="发送">➤</button>
@@ -141,32 +120,33 @@
     </div>
 </div>
 
-<script>
-    // 填充输入框
-    function fillInput(text) {
-        document.getElementById('message').value = text;
-        document.getElementById('message').focus();
-    }
+<!-- 配置数据：传递给 JavaScript -->
+<div id="chat-config"
+     data-stream-url="{% url 'chatbot:stream' %}"
+     data-csrf-token="{{ csrf_token }}"
+     style="display: none;"></div>
 
-    // 处理键盘事件
-    function handleKeyDown(event) {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            document.getElementById('chat-form').submit();
+<script>
+    // 填充输入框（快捷卡片调用）
+    function fillInput(text) {
+        const input = document.getElementById('message');
+        if (input) {
+            input.value = text;
+            input.focus();
+            // 触发输入事件以调整高度
+            input.dispatchEvent(new Event('input'));
         }
     }
 
-    // 自动调整输入框高度
-    const textarea = document.getElementById('message');
-    textarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = this.scrollHeight + 'px';
+    // 键盘快捷键支持
+    document.getElementById('message')?.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            document.getElementById('chat-form')?.dispatchEvent(new Event('submit'));
+        }
     });
-
-    // 滚动到底部
-    const messagesArea = document.getElementById('messages-area');
-    if (messagesArea) {
-        messagesArea.scrollTop = messagesArea.scrollHeight;
-    }
 </script>
+
+<!-- 加载 SSE 聊天模块 -->
+<script src="{% static 'js/chatbot.js' %}"></script>
 {% endblock %}
