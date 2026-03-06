@@ -1,0 +1,122 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link href="{% static 'css/index.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- 页面标题 -->
+    <div class="text-center mb-5">
+        <h1 class="page-title">🔹 图片工具网</h1>
+        <p class="text-muted fs-5">一站式图片处理与 AI 智能服务平台</p>
+    </div>
+
+    <!-- 工具矩阵 -->
+    <div class="row g-4">
+        <!-- 图片上传 -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'image_tool:index' %}" class="text-decoration-none">
+                <div class="tool-card h-100">
+                    <div class="tool-icon">🖼️</div>
+                    <h3 class="tool-title">图片上传</h3>
+                    <p class="tool-desc">快速上传图片，支持多种格式预览</p>
+                    <span class="tool-btn">立即使用 →</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- AI 聊天 -->
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'chatbot:index' %}" class="text-decoration-none">
+                <div class="tool-card h-100">
+                    <div class="tool-icon">🤖</div>
+                    <h3 class="tool-title">AI 聊天</h3>
+                    <p class="tool-desc">智能 AI 助手，解答您的各种问题</p>
+                    <span class="tool-btn">立即使用 →</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- 图片压缩 -->
+        <div class="col-md-4 col-lg-3">
+            <div class="tool-card h-100 coming-soon">
+                <div class="tool-icon">✂️</div>
+                <h3 class="tool-title">图片压缩</h3>
+                <p class="tool-desc">智能压缩图片，保持画质减小体积</p>
+                <span class="badge bg-secondary">即将上线</span>
+            </div>
+        </div>
+
+        <!-- 图片裁剪 -->
+        <div class="col-md-4 col-lg-3">
+            <div class="tool-card h-100 coming-soon">
+                <div class="tool-icon">🎯</div>
+                <h3 class="tool-title">图片裁剪</h3>
+                <p class="tool-desc">自由裁剪图片，支持多种比例</p>
+                <span class="badge bg-secondary">即将上线</span>
+            </div>
+        </div>
+
+        <!-- 格式转换 -->
+        <div class="col-md-4 col-lg-3">
+            <div class="tool-card h-100 coming-soon">
+                <div class="tool-icon">🔄</div>
+                <h3 class="tool-title">格式转换</h3>
+                <p class="tool-desc">PNG/JPG/WebP 格式互转</p>
+                <span class="badge bg-secondary">即将上线</span>
+            </div>
+        </div>
+
+        <!-- 图片滤镜 -->
+        <div class="col-md-4 col-lg-3">
+            <div class="tool-card h-100 coming-soon">
+                <div class="tool-icon">🎨</div>
+                <h3 class="tool-title">图片滤镜</h3>
+                <p class="tool-desc">丰富的滤镜效果，一键美化图片</p>
+                <span class="badge bg-secondary">即将上线</span>
+            </div>
+        </div>
+
+        <!-- OCR 识别 -->
+        <div class="col-md-4 col-lg-3">
+            <div class="tool-card h-100 coming-soon">
+                <div class="tool-icon">📝</div>
+                <h3 class="tool-title">OCR 识别</h3>
+                <p class="tool-desc">识别图片中的文字，支持多语言</p>
+                <span class="badge bg-secondary">即将上线</span>
+            </div>
+        </div>
+
+        <!-- 更多工具 -->
+        <div class="col-md-4 col-lg-3">
+            <div class="tool-card h-100 more-tools">
+                <div class="tool-icon">➕</div>
+                <h3 class="tool-title">更多工具</h3>
+                <p class="tool-desc">敬请期待更多实用功能</p>
+                <span class="tool-btn text-muted">敬请期待</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 热门功能提示 -->
+    <div class="mt-5 p-4 bg-white rounded-3 shadow-sm">
+        <h4 class="mb-3 text-primary">💡 热门功能</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-primary me-2">HOT</span>
+                    <span>图片上传预览 - 支持拖拽上传，实时预览</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-success me-2">NEW</span>
+                    <span>AI 智能聊天 - GPT 驱动的智能助手</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

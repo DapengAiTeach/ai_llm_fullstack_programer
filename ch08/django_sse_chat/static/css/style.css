@@ -1,0 +1,217 @@
+/* ========================================
+   图片工具网 - 科技蓝主题样式（方案三：简洁专业蓝）
+   ======================================== */
+
+/* 全局变量 */
+:root {
+    --tech-blue-primary: #1e40af;
+    --tech-blue-dark: #1e3a8a;
+    --tech-blue-light: #3b82f6;
+    --tech-blue-accent: #60a5fa;
+    --white: #ffffff;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --text-dark: #1f2937;
+}
+
+/* 全局样式 */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--gray-100);
+    color: var(--text-dark);
+}
+
+/* ========================================
+   顶部导航栏 - 简洁专业蓝风格
+   ======================================== */
+
+/* 导航栏主体 */
+.navbar-tech-blue {
+    background: linear-gradient(135deg, var(--tech-blue-primary) 0%, var(--tech-blue-dark) 100%);
+    box-shadow: 0 2px 10px rgba(30, 64, 175, 0.3);
+    padding: 0.75rem 0;
+}
+
+/* Logo 样式 */
+.navbar-tech-blue .navbar-brand {
+    color: var(--white) !important;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity 0.3s ease;
+}
+
+.navbar-tech-blue .navbar-brand:hover {
+    opacity: 0.9;
+}
+
+/* Logo 图标 */
+.navbar-tech-blue .brand-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--white);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tech-blue-primary);
+    font-size: 1.1rem;
+}
+
+/* 导航链接样式 */
+.navbar-tech-blue .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    margin: 0 0.25rem;
+    border-radius: 6px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.navbar-tech-blue .nav-link:hover {
+    color: var(--white) !important;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 当前激活的导航项 */
+.navbar-tech-blue .nav-link.active {
+    color: var(--white) !important;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 下划线动画效果 */
+.navbar-tech-blue .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background-color: var(--tech-blue-accent);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.navbar-tech-blue .nav-link:hover::after,
+.navbar-tech-blue .nav-link.active::after {
+    width: 70%;
+}
+
+/* 搜索框样式 */
+.navbar-tech-blue .search-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.navbar-tech-blue .search-input {
+    background-color: var(--white);
+    border: 2px solid transparent;
+    border-radius: 25px;
+    padding: 0.5rem 1.25rem;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    width: 200px;
+    transition: all 0.3s ease;
+}
+
+.navbar-tech-blue .search-input::placeholder {
+    color: #9ca3af;
+}
+
+.navbar-tech-blue .search-input:focus {
+    outline: none;
+    border-color: var(--tech-blue-accent);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+    width: 250px;
+}
+
+/* 搜索按钮 */
+.navbar-tech-blue .search-btn {
+    background: linear-gradient(135deg, var(--tech-blue-light) 0%, var(--tech-blue-accent) 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.5rem 1.5rem;
+    color: var(--white);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.navbar-tech-blue .search-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* 移动端汉堡菜单按钮 */
+.navbar-tech-blue .navbar-toggler {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+}
+
+.navbar-tech-blue .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* ========================================
+   响应式适配
+   ======================================== */
+
+@media (max-width: 991px) {
+    .navbar-tech-blue .navbar-collapse {
+        background-color: rgba(30, 58, 138, 0.98);
+        margin-top: 0.75rem;
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .navbar-tech-blue .nav-link {
+        margin: 0.25rem 0;
+        padding: 0.75rem 1rem !important;
+    }
+
+    .navbar-tech-blue .nav-link::after {
+        display: none;
+    }
+
+    .navbar-tech-blue .search-form {
+        margin-top: 1rem;
+        width: 100%;
+    }
+
+    .navbar-tech-blue .search-input {
+        flex: 1;
+        width: auto;
+    }
+
+    .navbar-tech-blue .search-input:focus {
+        width: auto;
+    }
+}
+
+/* ========================================
+   页面内容区域基础样式
+   ======================================== */
+
+.content-wrapper {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    margin-top: 1.5rem;
+}
+
+.page-title {
+    color: var(--tech-blue-dark);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 3px solid var(--tech-blue-accent);
+    display: inline-block;
+}
