@@ -231,6 +231,9 @@
     
     // 已添加复制按钮的代码块记录
     var processedForCopy = new WeakSet();
+    
+    // 已处理的图片记录
+    var processedImages = new WeakSet();
 
     // 初始化函数
     function init() {
@@ -313,6 +316,9 @@
                 
                 // 【可选】为图表添加复制按钮
                 addMermaidCopyButton(container, code);
+                
+                // 为图表添加下载按钮
+                addMermaidDownloadButton(container);
             }).catch(function(error) {
                 // 渲染失败时显示错误信息
                 console.warn('Mermaid render error:', error);
@@ -361,6 +367,132 @@
         // 添加到容器
         container.style.position = 'relative';
         container.appendChild(button);
+    }
+
+    /**
+     * 【新增】为 Mermaid 图表添加下载按钮
+     * @param {HTMLElement} container - 图表容器
+     */
+    function addMermaidDownloadButton(container) {
+        // 创建下载按钮
+        var button = document.createElement('button');
+        button.className = 'mermaid-download-btn';
+        button.setAttribute('type', 'button');
+        button.setAttribute('title', '下载图表为图片');
+        button.innerHTML = '<i class="bi bi-download"></i>';
+        
+        // 绑定点击事件
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 获取 SVG 元素
+            var svg = container.querySelector('svg');
+            if (!svg) {
+                console.warn('No SVG found in container');
+                return;
+            }
+            
+            try {
+                // 克隆 SVG 以修改样式
+                var clonedSvg = svg.cloneNode(true);
+                
+                // 确保 SVG 有 xmlns 命名空间
+                if (!clonedSvg.getAttribute('xmlns')) {
+                    clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                }
+                
+                // 获取 SVG 尺寸
+                var svgRect = svg.getBoundingClientRect();
+                var width = Math.max(svgRect.width, 100);
+                var height = Math.max(svgRect.height, 100);
+                
+                // 序列化 SVG
+                var serializer = new XMLSerializer();
+                var svgString = serializer.serializeToString(clonedSvg);
+                
+                // 添加 XML 声明
+                svgString = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' + svgString;
+                
+                // 创建 Blob
+                var blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                var url = URL.createObjectURL(blob);
+                
+                // 创建图片对象
+                var img = new Image();
+                img.onload = function() {
+                    // 创建 Canvas
+                    var canvas = document.createElement('canvas');
+                    canvas.width = width * 2; // 高分辨率
+                    canvas.height = height * 2;
+                    var ctx = canvas.getContext('2d');
+                    
+                    // 设置白色背景
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // 绘制图片（缩放以适应高分辨率）
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // 释放 Blob URL
+                    URL.revokeObjectURL(url);
+                    
+                    // 转换为 PNG 并下载
+                    try {
+                        var pngUrl = canvas.toDataURL('image/png');
+                        var link = document.createElement('a');
+                        link.href = pngUrl;
+                        link.download = 'mermaid-chart-' + Date.now() + '.png';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // 显示成功反馈
+                        var originalHTML = button.innerHTML;
+                        button.innerHTML = '<i class="bi bi-check-lg"></i>';
+                        button.classList.add('downloaded');
+                        
+                        setTimeout(function() {
+                            button.innerHTML = originalHTML;
+                            button.classList.remove('downloaded');
+                        }, 2000);
+                    } catch (e) {
+                        console.warn('Canvas to PNG failed:', e);
+                        // 降级：直接下载 SVG
+                        downloadSvgFallback(svgString);
+                    }
+                };
+                
+                img.onerror = function() {
+                    console.warn('SVG load failed');
+                    URL.revokeObjectURL(url);
+                    downloadSvgFallback(svgString);
+                };
+                
+                img.src = url;
+            } catch (e) {
+                console.warn('Mermaid download error:', e);
+            }
+        });
+        
+        // 添加到容器
+        container.appendChild(button);
+    }
+    
+    /**
+     * 降级下载 SVG
+     * @param {string} svgString - SVG 字符串
+     */
+    function downloadSvgFallback(svgString) {
+        var blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = 'mermaid-chart-' + Date.now() + '.svg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 
     /**
@@ -525,6 +657,131 @@
     }
 
     /**
+     * 下载图片
+     * @param {string} url - 图片地址
+     * @param {string} filename - 文件名
+     */
+    function downloadImage(url, filename) {
+        // 处理 Base64 图片
+        if (url.startsWith('data:image')) {
+            try {
+                var link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return true;
+            } catch (e) {
+                console.warn('Base64 download failed:', e);
+                return false;
+            }
+        }
+
+        // 普通 URL 下载
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.target = '_blank';
+        
+        // 尝试下载
+        try {
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            return true;
+        } catch (e) {
+            console.warn('Direct download failed:', e);
+            // 降级：打开新窗口
+            window.open(url, '_blank');
+            return false;
+        }
+    }
+
+    /**
+     * 处理容器中的图片，添加下载功能
+     * @param {HTMLElement} container - 包含图片的容器元素
+     */
+    function processImages(container) {
+        if (!container) return;
+        
+        // 查找所有图片
+        var images = container.querySelectorAll('img');
+        
+        images.forEach(function(img) {
+            // 跳过已处理的图片
+            if (processedImages.has(img)) {
+                return;
+            }
+            
+            // 跳过 Mermaid 图表中的 SVG（它们已经是渲染后的内容）
+            if (img.closest('.mermaid-container') || img.closest('.mermaid-rendered')) {
+                return;
+            }
+            
+            try {
+                var src = img.getAttribute('src');
+                var alt = img.getAttribute('alt') || 'image';
+                if (!src) return;
+                
+                // 提取文件名
+                var filename = alt.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_') + '.png';
+                if (src.includes('/')) {
+                    var lastPart = src.substring(src.lastIndexOf('/') + 1);
+                    if (lastPart && lastPart.includes('.')) {
+                        filename = lastPart.split('?')[0]; // 移除查询参数
+                    }
+                }
+                
+                // 创建包装容器
+                var wrapper = document.createElement('div');
+                wrapper.className = 'image-wrapper';
+                
+                // 克隆图片
+                var newImg = img.cloneNode(true);
+                
+                // 创建下载按钮
+                var button = document.createElement('button');
+                button.className = 'image-download-btn';
+                button.setAttribute('type', 'button');
+                button.setAttribute('title', '下载图片');
+                button.innerHTML = '<i class="bi bi-download"></i>';
+                
+                // 绑定下载事件
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    var success = downloadImage(src, filename);
+                    if (success) {
+                        // 显示成功反馈
+                        var originalHTML = button.innerHTML;
+                        button.innerHTML = '<i class="bi bi-check-lg"></i>';
+                        button.classList.add('copied');
+                        
+                        setTimeout(function() {
+                            button.innerHTML = originalHTML;
+                            button.classList.remove('copied');
+                        }, 2000);
+                    }
+                });
+                
+                // 组装结构
+                wrapper.appendChild(newImg);
+                wrapper.appendChild(button);
+                
+                // 替换原图片
+                img.parentNode.replaceChild(wrapper, img);
+                
+                // 标记为已处理（标记新图片）
+                processedImages.add(newImg);
+            } catch (e) {
+                console.warn('Image processing error:', e);
+            }
+        });
+    }
+
+    /**
      * 渲染 Markdown 为 HTML
      * @param {string} text - Markdown 文本
      * @param {Object} options - 选项
@@ -574,7 +831,8 @@
         isMermaidReady: function() { return isMermaidInitialized; },
         highlightNewBlocks: highlightNewBlocks,
         addCopyButtons: addCopyButtons,
-        renderMermaidCharts: renderMermaidCharts
+        renderMermaidCharts: renderMermaidCharts,
+        processImages: processImages
     };
 
     // 自动初始化（如果依赖已就绪）

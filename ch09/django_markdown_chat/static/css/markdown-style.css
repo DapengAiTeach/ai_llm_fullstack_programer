@@ -432,11 +432,128 @@
     border-color: #10b981;
 }
 
+/* Mermaid 图表下载按钮 */
+.markdown-body .mermaid-download-btn {
+    position: absolute;
+    top: 8px;
+    right: 48px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #6b7280;
+    font-size: 0.85rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.markdown-body .mermaid-container:hover .mermaid-download-btn {
+    opacity: 1;
+}
+
+.markdown-body .mermaid-download-btn:hover {
+    background: #f3f4f6;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.markdown-body .mermaid-download-btn.downloaded {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #3b82f6;
+}
+
 /* 移动端显示 Mermaid 复制按钮 */
 @media (max-width: 640px) {
     .markdown-body .mermaid-copy-btn {
         opacity: 1;
         padding: 4px 8px;
         font-size: 0.75rem;
+    }
+    
+    .markdown-body .mermaid-download-btn {
+        opacity: 1;
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        right: 44px;
+    }
+}
+
+/* ========== 图片下载按钮样式 ========== */
+
+/* 图片包装容器 */
+.markdown-body .image-wrapper {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    margin: 0.5rem 0;
+}
+
+/* 包装器内的图片 */
+.markdown-body .image-wrapper img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 0;
+}
+
+/* 图片下载按钮 */
+.markdown-body .image-download-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #6b7280;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+/* 鼠标悬停时显示按钮 */
+.markdown-body .image-wrapper:hover .image-download-btn {
+    opacity: 1;
+}
+
+/* 按钮悬停效果 */
+.markdown-body .image-download-btn:hover {
+    background: #ffffff;
+    color: #374151;
+    border-color: #d1d5db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* 按钮点击效果 */
+.markdown-body .image-download-btn:active {
+    transform: scale(0.95);
+}
+
+/* 下载成功状态 */
+.markdown-body .image-download-btn.copied {
+    background: #d1fae5;
+    color: #059669;
+    border-color: #10b981;
+    opacity: 1;
+}
+
+/* 移动端始终显示下载按钮 */
+@media (max-width: 640px) {
+    .markdown-body .image-download-btn {
+        opacity: 1;
+        width: 36px;
+        height: 36px;
     }
 }

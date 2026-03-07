@@ -356,6 +356,13 @@
     margin-top: -4px;
 }
 
+/* 操作按钮容器 */
+.message-action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 /* 消息整体复制按钮 */
 .message-copy-btn {
     display: flex;
@@ -393,6 +400,44 @@
     color: #1a7f37;
 }
 
+/* ========== 消息图片下载按钮 ========== */
+
+.message-download-img-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #6b7280;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.message-download-img-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: var(--tech-blue-primary, #1e40af);
+}
+
+.message-download-img-btn i {
+    font-size: 0.8rem;
+}
+
+/* 下载成功状态 */
+.message-download-img-btn.downloaded {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+}
+
+.message-download-img-btn.downloaded i {
+    color: #1d4ed8;
+}
+
 /* 移动端适配 */
 @media (max-width: 640px) {
     .message-actions {
@@ -400,6 +445,11 @@
     }
     
     .message-copy-btn {
+        padding: 6px 12px;
+        min-height: 32px;
+    }
+    
+    .message-download-img-btn {
         padding: 6px 12px;
         min-height: 32px;
     }

@@ -75,6 +75,9 @@
         
         // 绑定消息复制按钮事件（事件委托）
         bindMessageCopyButton();
+        
+        // 绑定消息图片下载按钮事件（事件委托）
+        bindMessageDownloadButton();
 
         console.log('Chatbot: 初始化完成');
     }
@@ -105,6 +108,98 @@
                 }
             });
         });
+    }
+
+    /**
+     * 绑定消息图片下载按钮事件
+     */
+    function bindMessageDownloadButton() {
+        elements.messagesArea.addEventListener('click', function(e) {
+            const btn = e.target.closest('.message-download-img-btn');
+            if (!btn) return;
+            
+            // 找到消息容器
+            const messageEl = btn.closest('.message.ai');
+            if (!messageEl) return;
+            
+            // 找到消息中的第一张图片
+            const img = messageEl.querySelector('.message-content img, .image-wrapper img');
+            if (!img) {
+                console.warn('Chatbot: 未找到可下载的图片');
+                return;
+            }
+            
+            const src = img.getAttribute('src');
+            if (!src) return;
+            
+            // 提取文件名
+            let filename = 'image.png';
+            const alt = img.getAttribute('alt') || '';
+            if (alt) {
+                filename = alt.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_') + '.png';
+            }
+            if (src.includes('/')) {
+                const lastPart = src.substring(src.lastIndexOf('/') + 1);
+                if (lastPart && lastPart.includes('.')) {
+                    filename = lastPart.split('?')[0];
+                }
+            }
+            
+            // 下载图片
+            const success = downloadImage(src, filename);
+            if (success) {
+                // 显示成功反馈
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check-lg"></i><span>已下载</span>';
+                btn.classList.add('downloaded');
+                
+                setTimeout(function() {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('downloaded');
+                }, 2000);
+            }
+        });
+    }
+
+    /**
+     * 下载图片
+     * @param {string} url - 图片地址
+     * @param {string} filename - 文件名
+     * @returns {boolean} - 是否成功
+     */
+    function downloadImage(url, filename) {
+        // 处理 Base64 图片
+        if (url.startsWith('data:image')) {
+            try {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return true;
+            } catch (e) {
+                console.warn('Base64 download failed:', e);
+                window.open(url, '_blank');
+                return false;
+            }
+        }
+
+        // 普通 URL 下载
+        try {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            return true;
+        } catch (e) {
+            console.warn('Direct download failed:', e);
+            window.open(url, '_blank');
+            return false;
+        }
     }
 
     /**
@@ -240,6 +335,9 @@
                         console.warn('Final Mermaid render error:', e);
                     }
                 }
+                
+                // 检测是否有图片，有则显示下载按钮
+                updateDownloadButtonVisibility(aiMessageEl);
                 return;
             }
 
@@ -298,10 +396,16 @@
                     </div>
                     <div class="message-actions">
                         <span class="message-time">刚刚</span>
-                        <button type="button" class="message-copy-btn" title="复制完整回复" aria-label="复制完整回复">
-                            <i class="bi bi-clipboard"></i>
-                            <span>复制</span>
-                        </button>
+                        <div class="message-action-buttons">
+                            <button type="button" class="message-download-img-btn" title="下载图片" aria-label="下载图片" style="display: none;">
+                                <i class="bi bi-download"></i>
+                                <span>下载图片</span>
+                            </button>
+                            <button type="button" class="message-copy-btn" title="复制完整回复" aria-label="复制完整回复">
+                                <i class="bi bi-clipboard"></i>
+                                <span>复制</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -328,6 +432,11 @@
                 // 为代码块添加复制按钮
                 if (typeof window.MarkdownRenderer.addCopyButtons === 'function') {
                     window.MarkdownRenderer.addCopyButtons(contentEl);
+                }
+                
+                // 处理图片添加下载功能
+                if (typeof window.MarkdownRenderer.processImages === 'function') {
+                    window.MarkdownRenderer.processImages(contentEl);
                 }
                 
                 // 延迟渲染 Mermaid 图表（使用防抖避免频繁渲染）
@@ -412,6 +521,28 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    /**
+     * 更新下载按钮可见性（检测消息中是否有图片）
+     * @param {HTMLElement} messageEl - 消息元素
+     */
+    function updateDownloadButtonVisibility(messageEl) {
+        if (!messageEl) return;
+        
+        const contentEl = messageEl.querySelector('.message-content');
+        const downloadBtn = messageEl.querySelector('.message-download-img-btn');
+        
+        if (!contentEl || !downloadBtn) return;
+        
+        // 检测是否有图片（包括普通img和包装后的图片）
+        const hasImage = contentEl.querySelector('img, .image-wrapper') !== null;
+        
+        if (hasImage) {
+            downloadBtn.style.display = 'flex';
+        } else {
+            downloadBtn.style.display = 'none';
+        }
     }
 
     // 页面加载完成后初始化
