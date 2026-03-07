@@ -5,11 +5,50 @@
     <meta charset="UTF-8">
     <title>AI聊天</title>
     <link rel="stylesheet" href="{% static 'bootstrap5.3.0/css/bootstrap.min.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
     {% block css %}
 
     {% endblock %}
 </head>
 <body>
+
+<nav class="navbar navbar-expand-lg navbar-tech-blue">
+    <div class="container-fluid">
+        <a href="{% url 'index:index' %}" class="navbar-brand">
+            <span class="brand-icon">🤖</span>
+            <span>AI聊天</span>
+        </a>
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.namespace == 'index' %}active{% endif %}"
+                       href="{% url 'index:index' %}">
+                        首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">关于</a>
+                </li>
+            </ul>
+            <form class="search-form" role="search">
+                <input class="search-input"
+                       type="search"
+                       placeholder="请输入..."
+                       aria-label="Search">
+                <button class="search-btn" type="submit">搜索</button>
+            </form>
+        </div>
+    </div>
+</nav>
 
 {% block content %}
 
