@@ -265,6 +265,123 @@
     border-color: #2da44e;
 }
 
+/* ============================================
+   Mermaid 图表样式
+   ============================================ */
+
+/* 图表容器 */
+.markdown-body .mermaid-container {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow-x: auto;
+    text-align: center;
+}
+
+/* 已渲染的图表容器 */
+.markdown-body .mermaid-container.mermaid-rendered {
+    background: #ffffff;
+}
+
+/* SVG 图表样式 */
+.markdown-body .mermaid-container svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+/* 图表错误提示 */
+.markdown-body .mermaid-error {
+    padding: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #dc2626;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* 流程图节点样式优化 */
+.markdown-body .mermaid-container .node rect,
+.markdown-body .mermaid-container .node circle,
+.markdown-body .mermaid-container .node ellipse,
+.markdown-body .mermaid-container .node polygon,
+.markdown-body .mermaid-container .node path {
+    stroke-width: 2px;
+}
+
+/* 时序图样式优化 */
+.markdown-body .mermaid-container .actor {
+    stroke-width: 2px;
+}
+
+.markdown-body .mermaid-container .messageLine0,
+.markdown-body .mermaid-container .messageLine1 {
+    stroke-width: 2px;
+}
+
+/* 甘特图样式优化 */
+.markdown-body .mermaid-container .section0,
+.markdown-body .mermaid-container .section1,
+.markdown-body .mermaid-container .section2,
+.markdown-body .mermaid-container .section3 {
+    opacity: 0.8;
+}
+
+/* 饼图样式优化 */
+.markdown-body .mermaid-container .pieTitleText {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* 类图样式优化 */
+.markdown-body .mermaid-container .classBox {
+    stroke-width: 2px;
+}
+
+/* 状态图样式优化 */
+.markdown-body .mermaid-container .transition {
+    stroke-width: 2px;
+}
+
+/* ER图样式优化 */
+.markdown-body .mermaid-container .entityBox {
+    stroke-width: 2px;
+}
+
+/* 深色模式适配（如果系统支持） */
+@media (prefers-color-scheme: dark) {
+    .markdown-body .mermaid-container {
+        background: #1f2937;
+        border-color: #374151;
+    }
+    
+    .markdown-body .mermaid-container.mermaid-rendered {
+        background: #111827;
+    }
+    
+    .markdown-body .mermaid-error {
+        background: #450a0a;
+        border-color: #7f1d1d;
+        color: #fca5a5;
+    }
+}
+
+/* 移动端适配 */
+@media (max-width: 640px) {
+    .markdown-body .mermaid-container {
+        padding: 0.5rem;
+        margin: 0.75rem 0;
+    }
+    
+    .markdown-body .mermaid-container svg {
+        font-size: 14px;
+    }
+}
+
 .markdown-body .code-copy-btn.copied i {
     color: #1a7f37;
 }
@@ -279,5 +396,47 @@
     
     .markdown-body .code-copy-btn span {
         display: none;
+    }
+}
+
+/* Mermaid 图表复制按钮 */
+.markdown-body .mermaid-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #6b7280;
+    font-size: 0.85rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.markdown-body .mermaid-container:hover .mermaid-copy-btn {
+    opacity: 1;
+}
+
+.markdown-body .mermaid-copy-btn:hover {
+    background: #f3f4f6;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.markdown-body .mermaid-copy-btn.copied {
+    background: #d1fae5;
+    color: #059669;
+    border-color: #10b981;
+}
+
+/* 移动端显示 Mermaid 复制按钮 */
+@media (max-width: 640px) {
+    .markdown-body .mermaid-copy-btn {
+        opacity: 1;
+        padding: 4px 8px;
+        font-size: 0.75rem;
     }
 }

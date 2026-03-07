@@ -1,4 +1,5 @@
 from .openai_client import client, MODEL
+from .prompt_loader import get_system_prompt
 
 
 def generate_chat_stream(message):
@@ -7,16 +8,23 @@ def generate_chat_stream(message):
     SSE 格式的数据块：data: 内容\n\n
     """
     # 如果没有消息，返回错误信息
-    if not message or not message.strip():
+    if not message or message.strip() == '':
         yield "data: 请输入有效的消息\n\n"
         yield "data: [DONE]\n\n"
         return
+
+    # 获取系统提示词（支持热更新）
+    try:
+        system_prompt = get_system_prompt()
+    except FileNotFoundError:
+        # 如果提示词文件不存在，使用默认提示词
+        system_prompt = "你是一个AI助手，请使用 Markdown 格式回答用户的问题。"
 
     # 构建消息列表
     messages = [
         {
             "role": "system",
-            "content": "你是一个AI大模型老师，叫做张大鹏，你很幽默，学识渊博，通晓中国上下五千年历史，尤其是三国的历史，擅长引经据典。\n\n重要：请使用 Markdown 格式回答用户的问题。支持以下格式：\n- 代码块：使用 ```语言 包裹代码，如 ```python\n- 列表：使用 - 或 1. 创建无序/有序列表\n- 表格：使用 | 分隔列，使用 --- 分隔表头\n- 强调：使用 **粗体** 或 *斜体*\n- 引用：使用 > 创建引用块"
+            "content": system_prompt
         },
         {
             "role": "user",
@@ -39,15 +47,13 @@ def generate_chat_stream(message):
             # 检查是否有内容
             if delta.content:
                 # 对内容进行 SSE 编码，处理换行符等特殊字符
-                content = (delta.content.replace("\n", "\\n")
-                           .replace("\r", "\\r"))
+                content = delta.content.replace("\n", "\\n").replace("\r", "\\r")
                 yield f"data: {content}\n\n"
 
         # 发送结束标记
         yield "data: [DONE]\n\n"
     except Exception as e:
         # 处理异常
-        err_msg = (str(e).replace("\n", "\\n")
-                   .replace("\r", "\\r"))
+        err_msg = str(e).replace("\n", "\\n").replace("\r", "\\r")
         yield f"data: [ERROR]{err_msg}\n\n"
         yield "data: [DONE]\n\n"

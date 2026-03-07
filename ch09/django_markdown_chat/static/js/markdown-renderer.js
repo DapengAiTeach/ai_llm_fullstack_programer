@@ -1,6 +1,7 @@
 /**
  * Markdown 渲染器模块
  * 封装 marked.js 配置和 highlight.js 代码高亮
+ * 新增：支持 Mermaid 图表渲染（DOM 后处理方案）
  */
 
 (function() {
@@ -17,6 +18,9 @@
         'html': 'xml',
         'htm': 'xml'
     };
+
+    // Mermaid 图表渲染状态跟踪
+    var renderedMermaidCharts = new WeakSet();
 
     // HTML 转义函数
     function escapeHtml(text) {
@@ -39,6 +43,11 @@
     // 检查 marked 是否已加载
     function isMarkedReady() {
         return typeof marked !== 'undefined';
+    }
+
+    // 检查 Mermaid 是否已加载
+    function isMermaidReady() {
+        return typeof mermaid !== 'undefined';
     }
 
     // 代码高亮函数
@@ -72,6 +81,37 @@
         return escapeHtml(code);
     }
 
+    // 初始化 Mermaid
+    function initMermaid() {
+        if (!isMermaidReady()) {
+            console.warn('mermaid.js is not loaded, chart rendering will be disabled');
+            return false;
+        }
+
+        try {
+            mermaid.initialize({
+                startOnLoad: false,           // 不自动渲染，由我们手动控制
+                theme: 'default',             // 主题：default, dark, forest, neutral
+                securityLevel: 'strict',      // 安全级别，防止XSS
+                flowchart: {
+                    useMaxWidth: true,
+                    htmlLabels: true,
+                    curve: 'basis'
+                },
+                sequence: {
+                    useMaxWidth: true
+                },
+                gantt: {
+                    useMaxWidth: true
+                }
+            });
+            return true;
+        } catch (e) {
+            console.error('Mermaid initialization error:', e);
+            return false;
+        }
+    }
+
     // 初始化 marked.js
     function initMarked() {
         if (!isMarkedReady()) {
@@ -79,7 +119,7 @@
             return false;
         }
 
-        // 配置 marked.js 选项
+        // 配置 marked.js 选项（不使用自定义 renderer，采用后处理方案）
         marked.setOptions({
             // 启用 GitHub 风格的换行
             breaks: true,
@@ -105,6 +145,32 @@
         return true;
     }
 
+    // 【新增】转换 Mermaid 代码块（DOM 后处理方案）
+    function convertMermaidBlocks(html) {
+        if (!html) return '';
+
+        // 匹配 <pre><code class="language-mermaid">...</code></pre>
+        // 注意：marked 可能已经转义了 HTML 实体
+        return html.replace(
+            /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/gi,
+            function(match, codeContent) {
+                // 解码 HTML 实体（因为 marked 已经转义了特殊字符）
+                var decodedCode = codeContent
+                    .replace(/&/g, '&')
+                    .replace(/</g, '<')
+                    .replace(/>/g, '>')
+                    .replace(/"/g, '"')
+                    .replace(/&#039;/g, "'");
+                
+                // 生成唯一ID
+                var id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
+                
+                // 返回 mermaid 容器（编码后的代码存入 data-code）
+                return '<div class="mermaid-container" id="' + id + '" data-code="' + escapeHtml(decodedCode) + '"></div>';
+            }
+        );
+    }
+
     // 简单的 HTML 清理函数（防止 XSS）
     function sanitizeHtml(html) {
         if (!html) return '';
@@ -118,7 +184,7 @@
             'pre': ['class'], 'blockquote': [],
             'a': ['href', 'title', 'target'], 'img': ['src', 'alt', 'title'],
             'table': [], 'thead': [], 'tbody': [], 'tr': [], 'th': [], 'td': [],
-            'div': ['class'], 'span': ['class']
+            'div': ['class', 'id', 'data-code'], 'span': ['class']
         };
 
         // 危险的 URL 协议
@@ -158,6 +224,7 @@
 
     // 初始化状态
     var isInitialized = false;
+    var isMermaidInitialized = false;
     
     // 已高亮代码块记录（用于增量高亮）
     var highlightedBlocks = new WeakSet();
@@ -179,6 +246,7 @@
         }
 
         initMarked();
+        isMermaidInitialized = initMermaid();
         isInitialized = true;
         return true;
     }
@@ -192,12 +260,17 @@
             return;
         }
         
-        // 查找所有未高亮的代码块
+        // 查找所有未高亮的代码块（跳过 mermaid 容器中的）
         var codeBlocks = container.querySelectorAll('pre code:not(.hljs)');
         
         codeBlocks.forEach(function(block) {
             // 跳过已处理的块
             if (highlightedBlocks.has(block)) {
+                return;
+            }
+            
+            // 跳过 mermaid 代码块（保险起见，虽然应该已经被转换了）
+            if (block.classList.contains('language-mermaid')) {
                 return;
             }
             
@@ -207,6 +280,117 @@
             } catch (e) {
                 console.warn('Highlight error:', e);
             }
+        });
+    }
+
+    /**
+     * 渲染单个 Mermaid 图表
+     * @param {HTMLElement} container - 图表容器元素
+     * @param {string} code - Mermaid 代码
+     */
+    function renderSingleMermaidChart(container, code) {
+        if (!isMermaidReady() || !container) {
+            return false;
+        }
+
+        // 检查是否已渲染
+        if (renderedMermaidCharts.has(container)) {
+            return true;
+        }
+
+        try {
+            // 清空容器
+            container.innerHTML = '';
+            
+            // 生成唯一ID
+            var id = 'mermaid-svg-' + Math.random().toString(36).substr(2, 9);
+            
+            // 使用 mermaid.render 渲染
+            mermaid.render(id, code).then(function(result) {
+                container.innerHTML = result.svg;
+                container.classList.add('mermaid-rendered');
+                renderedMermaidCharts.add(container);
+                
+                // 【可选】为图表添加复制按钮
+                addMermaidCopyButton(container, code);
+            }).catch(function(error) {
+                // 渲染失败时显示错误信息
+                console.warn('Mermaid render error:', error);
+                container.innerHTML = '<div class="mermaid-error">图表渲染失败，请检查语法</div>';
+            });
+            
+            return true;
+        } catch (e) {
+            console.warn('Mermaid render exception:', e);
+            return false;
+        }
+    }
+
+    /**
+     * 【新增】为 Mermaid 图表添加复制按钮
+     * @param {HTMLElement} container - 图表容器
+     * @param {string} code - Mermaid 源代码
+     */
+    function addMermaidCopyButton(container, code) {
+        // 创建复制按钮
+        var button = document.createElement('button');
+        button.className = 'mermaid-copy-btn';
+        button.setAttribute('type', 'button');
+        button.setAttribute('title', '复制图表源码');
+        button.innerHTML = '<i class="bi bi-copy"></i>';
+        
+        // 绑定点击事件
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            copyToClipboard(code).then(function(success) {
+                if (success) {
+                    var originalHTML = button.innerHTML;
+                    button.innerHTML = '<i class="bi bi-check-lg"></i>';
+                    button.classList.add('copied');
+                    
+                    setTimeout(function() {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('copied');
+                    }, 2000);
+                }
+            });
+        });
+        
+        // 添加到容器
+        container.style.position = 'relative';
+        container.appendChild(button);
+    }
+
+    /**
+     * 渲染容器中的所有 Mermaid 图表
+     * @param {HTMLElement} container - 包含图表的容器元素
+     */
+    function renderMermaidCharts(container) {
+        if (!isMermaidReady() || !container) {
+            return;
+        }
+
+        // 查找所有未渲染的 mermaid 容器
+        var mermaidContainers = container.querySelectorAll('.mermaid-container:not(.mermaid-rendered)');
+        
+        mermaidContainers.forEach(function(element) {
+            // 获取代码
+            var code = element.getAttribute('data-code');
+            if (!code) {
+                return;
+            }
+            
+            // 解码 HTML 实体
+            var decodedCode = code.replace(/&/g, '&')
+                                  .replace(/</g, '<')
+                                  .replace(/>/g, '>')
+                                  .replace(/"/g, '"')
+                                  .replace(/&#039;/g, "'");
+            
+            // 渲染图表
+            renderSingleMermaidChart(element, decodedCode);
         });
     }
 
@@ -363,13 +547,16 @@
         }
 
         try {
-            // 解析 Markdown
+            // 1. 解析 Markdown
             var html = marked.parse(text);
 
-            // 清理 HTML
+            // 2. 清理 HTML（XSS 防护）
             if (doSanitize) {
                 html = sanitizeHtml(html);
             }
+
+            // 3. 【新增】转换 mermaid 代码块（DOM 后处理方案）
+            html = convertMermaidBlocks(html);
 
             return html;
         } catch (e) {
@@ -384,8 +571,10 @@
         init: init,
         escapeHtml: escapeHtml,
         isReady: function() { return isInitialized; },
+        isMermaidReady: function() { return isMermaidInitialized; },
         highlightNewBlocks: highlightNewBlocks,
-        addCopyButtons: addCopyButtons
+        addCopyButtons: addCopyButtons,
+        renderMermaidCharts: renderMermaidCharts
     };
 
     // 自动初始化（如果依赖已就绪）

@@ -1,6 +1,7 @@
 /**
  * Chatbot SSE 流式聊天模块
  * 处理消息发送、接收和 UI 更新
+ * 新增：支持 Mermaid 图表渲染
  */
 
 (function() {
@@ -22,6 +23,39 @@
 
     // 当前 EventSource 实例
     let currentEventSource = null;
+
+    // 防抖定时器（用于 Mermaid 图表渲染）
+    let mermaidDebounceTimer = null;
+
+    /**
+     * 防抖函数
+     * @param {Function} func - 要执行的函数
+     * @param {number} wait - 等待时间（毫秒）
+     */
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    /**
+     * 渲染 Mermaid 图表（防抖版本）
+     */
+    const debouncedRenderMermaid = debounce(function(contentEl) {
+        if (window.MarkdownRenderer && typeof window.MarkdownRenderer.renderMermaidCharts === 'function') {
+            try {
+                window.MarkdownRenderer.renderMermaidCharts(contentEl);
+            } catch (e) {
+                console.warn('Mermaid render error:', e);
+            }
+        }
+    }, 500);
 
     /**
      * 初始化
@@ -196,6 +230,16 @@
                 currentEventSource.close();
                 currentEventSource = null;
                 setInputEnabled(true);
+                
+                // 消息结束时，立即渲染 Mermaid 图表（不等待防抖）
+                const contentEl = aiMessageEl.querySelector('.message-content');
+                if (contentEl && window.MarkdownRenderer && typeof window.MarkdownRenderer.renderMermaidCharts === 'function') {
+                    try {
+                        window.MarkdownRenderer.renderMermaidCharts(contentEl);
+                    } catch (e) {
+                        console.warn('Final Mermaid render error:', e);
+                    }
+                }
                 return;
             }
 
@@ -285,6 +329,9 @@
                 if (typeof window.MarkdownRenderer.addCopyButtons === 'function') {
                     window.MarkdownRenderer.addCopyButtons(contentEl);
                 }
+                
+                // 延迟渲染 Mermaid 图表（使用防抖避免频繁渲染）
+                debouncedRenderMermaid(contentEl);
                 
                 // 存储原始 Markdown 内容到 data 属性
                 element.dataset.markdown = content;
