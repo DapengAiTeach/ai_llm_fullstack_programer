@@ -165,7 +165,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    color: var(--white, #ffffff);
+    font-size: 1.25rem;
 }
 
 .chat-header .info {
@@ -217,6 +218,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--white, #ffffff);
     font-size: 2.5rem;
     margin: 0 auto 1rem;
     box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
