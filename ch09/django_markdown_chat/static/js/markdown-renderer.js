@@ -158,6 +158,9 @@
 
     // 初始化状态
     var isInitialized = false;
+    
+    // 已高亮代码块记录（用于增量高亮）
+    var highlightedBlocks = new WeakSet();
 
     // 初始化函数
     function init() {
@@ -175,6 +178,33 @@
         initMarked();
         isInitialized = true;
         return true;
+    }
+    
+    /**
+     * 对容器中的新代码块进行增量高亮
+     * @param {HTMLElement} container - 包含代码块的容器元素
+     */
+    function highlightNewBlocks(container) {
+        if (!isHighlightReady() || !container) {
+            return;
+        }
+        
+        // 查找所有未高亮的代码块
+        var codeBlocks = container.querySelectorAll('pre code:not(.hljs)');
+        
+        codeBlocks.forEach(function(block) {
+            // 跳过已处理的块
+            if (highlightedBlocks.has(block)) {
+                return;
+            }
+            
+            try {
+                hljs.highlightElement(block);
+                highlightedBlocks.add(block);
+            } catch (e) {
+                console.warn('Highlight error:', e);
+            }
+        });
     }
 
     /**
@@ -220,7 +250,8 @@
         render: renderMarkdown,
         init: init,
         escapeHtml: escapeHtml,
-        isReady: function() { return isInitialized; }
+        isReady: function() { return isInitialized; },
+        highlightNewBlocks: highlightNewBlocks
     };
 
     // 自动初始化（如果依赖已就绪）

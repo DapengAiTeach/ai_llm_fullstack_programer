@@ -170,6 +170,11 @@
             // 使用 Markdown 渲染器将内容渲染为 HTML
             if (window.MarkdownRenderer && typeof window.MarkdownRenderer.render === 'function') {
                 contentEl.innerHTML = window.MarkdownRenderer.render(content);
+                
+                // 增量高亮新出现的代码块
+                if (typeof window.MarkdownRenderer.highlightNewBlocks === 'function') {
+                    window.MarkdownRenderer.highlightNewBlocks(contentEl);
+                }
             } else {
                 // 降级方案：直接显示纯文本
                 contentEl.textContent = content;
