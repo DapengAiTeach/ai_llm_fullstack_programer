@@ -378,7 +378,7 @@
         var button = document.createElement('button');
         button.className = 'mermaid-download-btn';
         button.setAttribute('type', 'button');
-        button.setAttribute('title', '下载图表为图片');
+        button.setAttribute('title', '下载图表为 SVG');
         button.innerHTML = '<i class="bi bi-download"></i>';
         
         // 绑定点击事件
@@ -402,11 +402,6 @@
                     clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
                 }
                 
-                // 获取 SVG 尺寸
-                var svgRect = svg.getBoundingClientRect();
-                var width = Math.max(svgRect.width, 100);
-                var height = Math.max(svgRect.height, 100);
-                
                 // 序列化 SVG
                 var serializer = new XMLSerializer();
                 var svgString = serializer.serializeToString(clonedSvg);
@@ -414,62 +409,26 @@
                 // 添加 XML 声明
                 svgString = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' + svgString;
                 
-                // 创建 Blob
+                // 创建 Blob 并下载 SVG
                 var blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
                 var url = URL.createObjectURL(blob);
+                var link = document.createElement('a');
+                link.href = url;
+                link.download = 'mermaid-chart-' + Date.now() + '.svg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
                 
-                // 创建图片对象
-                var img = new Image();
-                img.onload = function() {
-                    // 创建 Canvas
-                    var canvas = document.createElement('canvas');
-                    canvas.width = width * 2; // 高分辨率
-                    canvas.height = height * 2;
-                    var ctx = canvas.getContext('2d');
-                    
-                    // 设置白色背景
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    
-                    // 绘制图片（缩放以适应高分辨率）
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    // 释放 Blob URL
-                    URL.revokeObjectURL(url);
-                    
-                    // 转换为 PNG 并下载
-                    try {
-                        var pngUrl = canvas.toDataURL('image/png');
-                        var link = document.createElement('a');
-                        link.href = pngUrl;
-                        link.download = 'mermaid-chart-' + Date.now() + '.png';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        
-                        // 显示成功反馈
-                        var originalHTML = button.innerHTML;
-                        button.innerHTML = '<i class="bi bi-check-lg"></i>';
-                        button.classList.add('downloaded');
-                        
-                        setTimeout(function() {
-                            button.innerHTML = originalHTML;
-                            button.classList.remove('downloaded');
-                        }, 2000);
-                    } catch (e) {
-                        console.warn('Canvas to PNG failed:', e);
-                        // 降级：直接下载 SVG
-                        downloadSvgFallback(svgString);
-                    }
-                };
+                // 显示成功反馈
+                var originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="bi bi-check-lg"></i>';
+                button.classList.add('downloaded');
                 
-                img.onerror = function() {
-                    console.warn('SVG load failed');
-                    URL.revokeObjectURL(url);
-                    downloadSvgFallback(svgString);
-                };
-                
-                img.src = url;
+                setTimeout(function() {
+                    button.innerHTML = originalHTML;
+                    button.classList.remove('downloaded');
+                }, 2000);
             } catch (e) {
                 console.warn('Mermaid download error:', e);
             }
@@ -479,21 +438,6 @@
         container.appendChild(button);
     }
     
-    /**
-     * 降级下载 SVG
-     * @param {string} svgString - SVG 字符串
-     */
-    function downloadSvgFallback(svgString) {
-        var blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-        var url = URL.createObjectURL(blob);
-        var link = document.createElement('a');
-        link.href = url;
-        link.download = 'mermaid-chart-' + Date.now() + '.svg';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }
 
     /**
      * 渲染容器中的所有 Mermaid 图表
