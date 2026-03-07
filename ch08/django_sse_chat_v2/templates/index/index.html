@@ -1,4 +1,150 @@
 {% extends 'layout/base.html' %}
+{% load static %}
+{% block css %}
+	<link rel="stylesheet" href="{% static 'css/chatbot.css' %}"/>
+{% endblock %}
 {% block content %}
-	<h1>AI聊天首页</h1>
+    <div class="container py-3">
+        <div class="chat-container">
+            <!-- 左侧边栏 -->
+            <aside class="chat-sidebar">
+                <!-- 新建对话按钮 -->
+                <button class="new-chat-btn" onclick="location.reload()">
+                    <span>➕</span>
+                    <span>新建对话</span>
+                </button>
+
+                <!-- 历史会话列表 -->
+                <div class="history-section">
+                    <div class="history-title">🕐 最近会话</div>
+                    <div class="history-list">
+                        <div class="history-item active">
+                            <span class="icon">💬</span>
+                            <span class="text">当前对话</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="icon">🖼️</span>
+                            <span class="text">图片压缩咨询</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="icon">📝</span>
+                            <span class="text">OCR识别功能</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="icon">🎨</span>
+                            <span class="text">图片格式转换</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 快捷提示词模板 -->
+                <div class="templates-section">
+                    <div class="templates-title">💡 快捷提问</div>
+                    <div class="template-tags">
+                        <span class="template-tag" onclick="fillInput('如何压缩图片？')">图片压缩</span>
+                        <span class="template-tag" onclick="fillInput('支持哪些格式？')">格式转换</span>
+                        <span class="template-tag" onclick="fillInput('OCR能识别什么？')">OCR识别</span>
+                        <span class="template-tag" onclick="fillInput('怎么使用图片工具？')">使用教程</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 中央聊天区域 -->
+            <main class="chat-main">
+                <!-- 聊天头部 -->
+                <div class="chat-header">
+                    <div class="avatar">🤖</div>
+                    <div class="info">
+                        <div class="name">AI 智能助手</div>
+                        <div class="status">在线</div>
+                    </div>
+                </div>
+
+                <!-- 消息列表区域 -->
+                <div class="messages-area" id="messages-area">
+                    <!-- 欢迎消息（首次加载时显示，发送消息后会自动移除） -->
+                    <div class="welcome-message">
+                        <div class="avatar-large">🤖</div>
+                        <h2>你好！我是 AI 智能助手</h2>
+                        <p>有什么可以帮您的？我可以为您解答关于图片工具的问题</p>
+
+                        <!-- 快捷功能卡片 -->
+                        <div class="quick-cards">
+                            <div class="quick-card" onclick="fillInput('如何压缩图片？')">
+                                <div class="icon">✂️</div>
+                                <div class="title">图片压缩</div>
+                                <div class="desc">减小图片体积，保持画质</div>
+                            </div>
+                            <div class="quick-card" onclick="fillInput('支持哪些图片格式？')">
+                                <div class="icon">🔄</div>
+                                <div class="title">格式转换</div>
+                                <div class="desc">JPG/PNG/WebP 互转</div>
+                            </div>
+                            <div class="quick-card" onclick="fillInput('OCR文字识别怎么用？')">
+                                <div class="icon">📝</div>
+                                <div class="title">OCR识别</div>
+                                <div class="desc">识别图片中的文字</div>
+                            </div>
+                            <div class="quick-card" onclick="fillInput('图片工具有哪些功能？')">
+                                <div class="icon">🛠️</div>
+                                <div class="title">全部功能</div>
+                                <div class="desc">查看所有可用工具</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 输入区域 -->
+                <div class="input-area">
+                    <form id="chat-form">
+                        {% csrf_token %}
+                        <div class="input-wrapper">
+                        <textarea
+                                class="input-field"
+                                id="message"
+                                name="message"
+                                placeholder="输入你的问题..."
+                                rows="1"
+                                required></textarea>
+                            <div class="input-actions">
+                                <button type="button" class="action-btn" title="语音输入">🎤</button>
+                                <button type="submit" class="send-btn" title="发送">➤</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="input-hint">按 Enter 发送，Shift + Enter 换行</div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 配置数据：传递给 JavaScript -->
+    <div id="chat-config"
+         data-stream-url="{% url 'index:stream_chat' %}"
+         data-csrf-token="{{ csrf_token }}"
+         style="display: none;"></div>
+{% endblock %}
+{% block js %}
+    <script>
+        // 填充输入框（快捷卡片调用）
+        function fillInput(text) {
+            const input = document.getElementById('message');
+            if (input) {
+                input.value = text;
+                input.focus();
+                // 触发输入事件以调整高度
+                input.dispatchEvent(new Event('input'));
+            }
+        }
+
+        // 键盘快捷键支持
+        document.getElementById('message')?.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                document.getElementById('chat-form')?.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+    <!-- 加载 SSE 聊天模块 -->
+    <script src="{% static 'js/chatbot.js' %}"></script>
 {% endblock %}
