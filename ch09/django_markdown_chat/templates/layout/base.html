@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI聊天</title>
+    <link rel="stylesheet" href="{% static 'bootstrap5.3.0/css/bootstrap.min.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+    {% block css %}
+
+    {% endblock %}
+</head>
+<body>
+{% include 'layout/top_nav.html' %}
+
+{% block content %}
+
+{% endblock %}
+
+<script src="{% static 'bootstrap5.3.0/js/bootstrap.bundle.min.js' %}"></script>
+{% block js %}
+
+{% endblock %}
+</body>
+</html>
