@@ -332,6 +332,79 @@
     margin-top: 0.25rem;
 }
 
+/* 工具栏中的时间样式 */
+.message-actions .message-time {
+    margin-top: 0;
+}
+
+/* 消息包装器（用于整体复制按钮定位） */
+.message-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 消息底部工具栏 */
+.message-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 0 0 12px 12px;
+    margin-top: -4px;
+}
+
+/* 消息整体复制按钮 */
+.message-copy-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #6b7280;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.message-copy-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: var(--tech-blue-primary, #1e40af);
+}
+
+.message-copy-btn i {
+    font-size: 0.8rem;
+}
+
+/* 复制成功状态 */
+.message-copy-btn.copied {
+    background: #dafbe1;
+    border-color: #2da44e;
+    color: #1a7f37;
+}
+
+.message-copy-btn.copied i {
+    color: #1a7f37;
+}
+
+/* 移动端适配 */
+@media (max-width: 640px) {
+    .message-actions {
+        padding: 0.5rem;
+    }
+    
+    .message-copy-btn {
+        padding: 6px 12px;
+        min-height: 32px;
+    }
+}
+
 /* ========================================
    输入区域
    ======================================== */

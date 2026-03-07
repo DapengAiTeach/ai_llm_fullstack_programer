@@ -38,8 +38,107 @@
         // 初始化输入框高度
         autoResizeTextarea();
         elements.input.addEventListener('input', autoResizeTextarea);
+        
+        // 绑定消息复制按钮事件（事件委托）
+        bindMessageCopyButton();
 
         console.log('Chatbot: 初始化完成');
+    }
+
+    /**
+     * 绑定消息整体复制按钮事件
+     */
+    function bindMessageCopyButton() {
+        elements.messagesArea.addEventListener('click', function(e) {
+            const btn = e.target.closest('.message-copy-btn');
+            if (!btn) return;
+            
+            // 找到消息容器
+            const messageEl = btn.closest('.message.ai');
+            if (!messageEl) return;
+            
+            // 获取 Markdown 内容
+            const markdownContent = messageEl.dataset.markdown;
+            if (!markdownContent) {
+                console.warn('Chatbot: 未找到 Markdown 内容');
+                return;
+            }
+            
+            // 复制到剪贴板
+            copyToClipboard(markdownContent).then(function(success) {
+                if (success) {
+                    showMessageCopySuccess(btn);
+                }
+            });
+        });
+    }
+
+    /**
+     * 复制文本到剪贴板
+     * @param {string} text - 要复制的文本
+     * @returns {Promise<boolean>} - 是否复制成功
+     */
+    function copyToClipboard(text) {
+        return new Promise(function(resolve) {
+            // 优先使用现代 Clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    resolve(true);
+                }).catch(function(err) {
+                    console.warn('Clipboard API failed:', err);
+                    resolve(fallbackCopyToClipboard(text));
+                });
+            } else {
+                resolve(fallbackCopyToClipboard(text));
+            }
+        });
+    }
+
+    /**
+     * 降级复制方案（使用 execCommand）
+     * @param {string} text - 要复制的文本
+     * @returns {boolean} - 是否复制成功
+     */
+    function fallbackCopyToClipboard(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '0';
+        document.body.appendChild(textarea);
+        
+        let success = false;
+        try {
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            success = document.execCommand('copy');
+        } catch (e) {
+            console.warn('execCommand copy failed:', e);
+        }
+        
+        document.body.removeChild(textarea);
+        return success;
+    }
+
+    /**
+     * 显示消息复制成功反馈
+     * @param {HTMLElement} button - 复制按钮元素
+     */
+    function showMessageCopySuccess(button) {
+        const icon = button.querySelector('i');
+        const textSpan = button.querySelector('span');
+        if (!icon) return;
+        
+        const originalHTML = button.innerHTML;
+        button.classList.add('copied');
+        button.innerHTML = '<i class="bi bi-check-lg"></i><span>已复制</span>';
+        button.disabled = true;
+        
+        setTimeout(function() {
+            button.classList.remove('copied');
+            button.innerHTML = originalHTML;
+            button.disabled = false;
+        }, 2000);
     }
 
     /**
@@ -149,11 +248,17 @@
         const html = `
             <div class="message ai" id="${tempId}">
                 <div class="message-avatar">🤖</div>
-                <div>
+                <div class="message-wrapper">
                     <div class="message-content markdown-body">
                         <span class="typing-indicator">正在思考<span>.</span><span>.</span><span>.</span></span>
                     </div>
-                    <div class="message-time">刚刚</div>
+                    <div class="message-actions">
+                        <span class="message-time">刚刚</span>
+                        <button type="button" class="message-copy-btn" title="复制完整回复" aria-label="复制完整回复">
+                            <i class="bi bi-clipboard"></i>
+                            <span>复制</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -180,9 +285,13 @@
                 if (typeof window.MarkdownRenderer.addCopyButtons === 'function') {
                     window.MarkdownRenderer.addCopyButtons(contentEl);
                 }
+                
+                // 存储原始 Markdown 内容到 data 属性
+                element.dataset.markdown = content;
             } else {
                 // 降级方案：直接显示纯文本
                 contentEl.textContent = content;
+                element.dataset.markdown = content;
             }
             scrollToBottom();
         }
