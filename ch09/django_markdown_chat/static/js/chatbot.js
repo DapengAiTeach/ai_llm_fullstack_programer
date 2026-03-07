@@ -175,6 +175,11 @@
                 if (typeof window.MarkdownRenderer.highlightNewBlocks === 'function') {
                     window.MarkdownRenderer.highlightNewBlocks(contentEl);
                 }
+                
+                // 为代码块添加复制按钮
+                if (typeof window.MarkdownRenderer.addCopyButtons === 'function') {
+                    window.MarkdownRenderer.addCopyButtons(contentEl);
+                }
             } else {
                 // 降级方案：直接显示纯文本
                 contentEl.textContent = content;

@@ -161,6 +161,9 @@
     
     // 已高亮代码块记录（用于增量高亮）
     var highlightedBlocks = new WeakSet();
+    
+    // 已添加复制按钮的代码块记录
+    var processedForCopy = new WeakSet();
 
     // 初始化函数
     function init() {
@@ -208,6 +211,136 @@
     }
 
     /**
+     * 复制文本到剪贴板
+     * @param {string} text - 要复制的文本
+     * @returns {Promise<boolean>} - 是否复制成功
+     */
+    function copyToClipboard(text) {
+        return new Promise(function(resolve) {
+            // 优先使用现代 Clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    resolve(true);
+                }).catch(function(err) {
+                    console.warn('Clipboard API failed:', err);
+                    // 降级到传统方法
+                    resolve(fallbackCopyToClipboard(text));
+                });
+            } else {
+                // 使用降级方案
+                resolve(fallbackCopyToClipboard(text));
+            }
+        });
+    }
+
+    /**
+     * 降级复制方案（使用 execCommand）
+     * @param {string} text - 要复制的文本
+     * @returns {boolean} - 是否复制成功
+     */
+    function fallbackCopyToClipboard(text) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '0';
+        document.body.appendChild(textarea);
+        
+        var success = false;
+        try {
+            textarea.select();
+            textarea.setSelectionRange(0, 99999); // 兼容移动设备
+            success = document.execCommand('copy');
+        } catch (e) {
+            console.warn('execCommand copy failed:', e);
+        }
+        
+        document.body.removeChild(textarea);
+        return success;
+    }
+
+    /**
+     * 显示复制成功反馈
+     * @param {HTMLElement} button - 复制按钮元素
+     */
+    function showCopySuccess(button) {
+        var originalHTML = button.innerHTML;
+        button.classList.add('copied');
+        button.innerHTML = '<i class="bi bi-check-lg"></i><span>已复制</span>';
+        button.disabled = true;
+        
+        setTimeout(function() {
+            button.classList.remove('copied');
+            button.innerHTML = originalHTML;
+            button.disabled = false;
+        }, 2000);
+    }
+
+    /**
+     * 从代码块元素中提取纯文本
+     * @param {HTMLElement} preElement - pre 元素
+     * @returns {string} - 代码文本
+     */
+    function getCodeText(preElement) {
+        var codeElement = preElement.querySelector('code');
+        if (!codeElement) return '';
+        
+        // 获取文本内容，处理 HTML 实体
+        var text = codeElement.textContent || codeElement.innerText || '';
+        return text.replace(/\n$/, ''); // 移除末尾多余换行
+    }
+
+    /**
+     * 为容器中的代码块添加复制按钮
+     * @param {HTMLElement} container - 包含代码块的容器元素
+     */
+    function addCopyButtons(container) {
+        if (!container) return;
+        
+        // 查找所有 pre 元素
+        var preBlocks = container.querySelectorAll('pre');
+        
+        preBlocks.forEach(function(pre) {
+            // 跳过已处理的块
+            if (processedForCopy.has(pre)) {
+                return;
+            }
+            
+            // 检查是否有代码内容
+            var codeText = getCodeText(pre);
+            if (!codeText.trim()) {
+                return;
+            }
+            
+            // 创建复制按钮
+            var button = document.createElement('button');
+            button.className = 'code-copy-btn';
+            button.setAttribute('type', 'button');
+            button.setAttribute('aria-label', '复制代码');
+            button.innerHTML = '<i class="bi bi-copy"></i><span>复制</span>';
+            
+            // 绑定点击事件
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var text = getCodeText(pre);
+                copyToClipboard(text).then(function(success) {
+                    if (success) {
+                        showCopySuccess(button);
+                    } else {
+                        console.warn('Copy failed');
+                    }
+                });
+            });
+            
+            // 添加到 pre 元素
+            pre.appendChild(button);
+            processedForCopy.add(pre);
+        });
+    }
+
+    /**
      * 渲染 Markdown 为 HTML
      * @param {string} text - Markdown 文本
      * @param {Object} options - 选项
@@ -251,7 +384,8 @@
         init: init,
         escapeHtml: escapeHtml,
         isReady: function() { return isInitialized; },
-        highlightNewBlocks: highlightNewBlocks
+        highlightNewBlocks: highlightNewBlocks,
+        addCopyButtons: addCopyButtons
     };
 
     // 自动初始化（如果依赖已就绪）
