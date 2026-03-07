@@ -150,7 +150,7 @@
             <div class="message ai" id="${tempId}">
                 <div class="message-avatar">🤖</div>
                 <div>
-                    <div class="message-content">
+                    <div class="message-content markdown-body">
                         <span class="typing-indicator">正在思考<span>.</span><span>.</span><span>.</span></span>
                     </div>
                     <div class="message-time">刚刚</div>
@@ -167,8 +167,13 @@
     function updateAIMessage(element, content) {
         const contentEl = element.querySelector('.message-content');
         if (contentEl) {
-            // 将换行符转换为 <br> 标签
-            contentEl.innerHTML = escapeHtml(content).replace(/\\n/g, '<br>');
+            // 使用 Markdown 渲染器将内容渲染为 HTML
+            if (window.MarkdownRenderer && typeof window.MarkdownRenderer.render === 'function') {
+                contentEl.innerHTML = window.MarkdownRenderer.render(content);
+            } else {
+                // 降级方案：直接显示纯文本
+                contentEl.textContent = content;
+            }
             scrollToBottom();
         }
     }

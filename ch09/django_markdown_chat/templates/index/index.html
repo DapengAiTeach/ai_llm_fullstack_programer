@@ -2,6 +2,8 @@
 {% load static %}
 {% block css %}
 	<link rel="stylesheet" href="{% static 'css/chatbot.css' %}"/>
+	<link rel="stylesheet" href="{% static 'css/markdown-style.css' %}"/>
+	<link rel="stylesheet" href="{% static 'markdown/styles/github.min.css' %}"/>
 {% endblock %}
 {% block content %}
     <div class="container py-3">
@@ -145,6 +147,12 @@
             }
         });
     </script>
+    <!-- Markdown 解析器 -->
+    <script src="{% static 'markdown/marked.min.js' %}"></script>
+    <!-- 代码高亮库 (完整版包含所有常用语言) -->
+    <script src="{% static 'markdown/highlight.bundle.min.js' %}"></script>
+    <!-- Markdown 渲染器模块 -->
+    <script src="{% static 'js/markdown-renderer.js' %}"></script>
     <!-- 加载 SSE 聊天模块 -->
     <script src="{% static 'js/chatbot.js' %}"></script>
 {% endblock %}
